@@ -1,0 +1,18 @@
+git clone <repo link>	--> clones the repo into the device
+## for cloning a repository in your device
+
+git add .	--> stage changes in the repo 
+git commit -m "message"		--> commits the changes in the repo
+git push	--> pushes the changes into github
+## For pushing the changes made to github
+
+git config --global user.email "<mailid used for github accnt>"
+git config --global user.name "<github username>"
+## used to configure git settings once and apply them to all repositories in the device. Need to do only once after downloading git packages in the device
+
+git init	--> initialize the repo
+##git is only in the local device, to upload into github, you need to have a repository in it. We use git init to initialize git on the device
+
+git remote add origin https://github.com/<username>/<reponame>.git
+git remote set-url origin https://[token]@github.com/<username>/<reponame>
+## Running the commands inside the repo changes git push such that you don't need to enter username and token every time
