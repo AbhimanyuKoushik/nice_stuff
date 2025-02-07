@@ -1,0 +1,28 @@
+IEEE format of representing binary number -->
+given number a, let representation of it in binary be 11100101011.1101010101 then
+Sign of a is taken as first bit 1 means -ve, 0 means is +ve
+
+a = 1.11001010111101010101 x 2^10
+In this representation 1 is always the first constant hence we need not represent it anyway
+the exponent of 2 (10 in this case) is taken and added to 127 and that is represented in binary with 8 bits (so that we can include -ve exponents by avoiding sign bit in exponent) and rest of the fractional part as the rest 23 bits, hence the representation would be -->
+a = 0 10001001 11001010111101010101000 and in 4 bytes as 01000100 11100101 01111010 10101000, basically S E M for sign, exponent and mantissa
+
+Since we can find square root of only positive, the first bit from left is always 0.
+Now any given binary number in above format can be written as (-1)^S x (1+(M/(2^23))) x 2^(E-127)
+Now taking S =0, we will take log2 of the number --> log2(1+(M/(2^23)))+E-127
+We know that log2(1+x) can be approximated as x when x is between 0 and 1 with a small correction term c, when c = 0.0430 the deviation of the approximation from function is least on average.
+Then our expression becomes M/(2^23) + c + E-127 --> rearranginh the expression becomes (1/(2^23))x(M+(2^23)E) + c-127 now the numerator in the fraction is the bit representation of the given number
+
+Now we cannot do any bit manupulation on floats in C, so basically we need a way to do bit manipulation in C --> * (long * ) &y this converts the number into a long without changing any bits in the memory, &y takes the address of y as float, now we trick C with (long *) which makes C think its the address of a long anf * reads the address in the memory thinking its a long and the line i = * (long *) &y; saves what it reads in the address of y as long in i.
+
+bit shift a number left doubles it and bit shifting to right halfs it (round to lower int) but doing this an exponent either squares it or takes square root of it
+
+We will try to calculate log(1/sqrt(y)) which is (-1/2)log(y), its of dividing it by 2, we can just shift the bits of log(y).
+
+If k is our solution then, if we represent both k and (-1/2)log(y) in terms of M and E as we did previously and solve for the bits of k we get -->
+Mk + (2^23)Ek = (3/2)x(2^23)x(127-c) - (1/2)(My + (2^23)Ey)
+The first term is represented as 0x5f3759df in hexadecimal format, then k = hex - (i >> 1), to represent in hexadecimal format, write it in IEEE format and convert each group of 4 bits into hexadecimal system and concatenate then for the hexadecimal number.
+
+Now store the float version of i in y and we have a decent approximation of square root
+
+Now use newton iteration method twice to get decrease the error and we have the square root.
