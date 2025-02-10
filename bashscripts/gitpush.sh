@@ -28,9 +28,10 @@ echo "Changes pushed successfully!"
 
 #To run this bash script you have two options --
 #1. Either copy this bash script in every repo, make it executable using the command chmod +x gitpush.sh and then use it or
-#2. Keep it in a place where it is accessible to every directory. Usually such a place can be found by running the command echo $PATH. For the current device, it turns out to be /use/local/bin. Run the following commands to move it and make it an executable file
-# -->sudo mv gitpush.sh /usr/local/bin/gitpush
-# -->sudo chmod +x /usr/local/bin/gitpush
+#2. Keep it in a place where it is accessible to every directory. Usually such a place can be found by running the command echo $PATH. For the current device, it turns out to be ~/.local/bin Run the following commands to move it and make it an executable file
+# To keep a folder location /.local/bin in path use export PATH=$PATH:/home/abhimanyukoushik07/.local/bin (or what ever the folder location is)
+# -->mv gitpush.sh ~/.local/bin/gitpush
+# -->chmod +x ~/.local/bin/gitpush
+# Rule of thumb, don't mess around with /usr/local/bin
 # Now the file should be executable from anywhere
-# To delete the following bash script run sudo rm /usr/local/bin/gitpush
-
+# To delete the following bash script run rm ~/.local/bin/gitpush
