@@ -1,0 +1,5 @@
+https://github.com/prasanthrangan/hyprdots?tab=readme-ov-file
+
+Install this installation script using the commands given in the github page
+Now you check the keybindings using Win+fwdslash
+To change the keybindings, go to the keybindings file in nvim .config/hypr/keybindings.conf and then change it

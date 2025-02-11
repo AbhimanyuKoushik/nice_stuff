@@ -1,0 +1,20 @@
+Starship is a customizable prompt for any shell. To install it, enter the below command in terminal. (Always install zsh, apparently its better idk why)
+
+curl -sS https://starship.rs/install.sh | sh
+
+Now, go to zshrc using ~/.zshrc In that we have to paste the line 
+eval "$(starship init zsh)"
+
+And then comment out the lines 
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+
+Now source .zshrc using source ~/.zshrc
+
+To install a preset go to the site https://starship.rs/presets/ and select one of the presents, I liked Tokyo night so to install enter 
+starship preset tokyo-night -o ~/.config/starship.toml
+It gets activated on its on due to the line eval "(starship init zsh)" in .zshrc
+The icon in terminal will be apple, to change it to arch open starship.toml in .config using the command nvim .config/starship.toml In the first line you will have something like [░▒▓](#a3aed2)\ . I didnt like it so I removed the line
+Then in the next like remove the apple symbol and then go to the website https://www.nerdfonts.com/cheat-sheet or the first website after searching nerd font cheat-sheet. Then copy the arch symbol and paste it in place of apple symbol and then save it. Its done
+
+Now its done. for Further reading go the website https://starship.rs/guide/
