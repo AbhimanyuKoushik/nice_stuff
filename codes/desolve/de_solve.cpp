@@ -52,6 +52,21 @@ public:
 
 };
 
+class equation {
+// The equation is in the form f(x) = 0
+public:
+    double (*function)(double);
+    
+    equation(double (*func)(double)){
+        function = func;
+    }
+
+    double solveeq() {
+        y = 10;
+        while(function)
+    }
+}
+
 // Sample function dy/dx = y
 double sampleFunction(double x, double y) {
     return y;
