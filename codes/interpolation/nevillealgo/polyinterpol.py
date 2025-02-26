@@ -13,9 +13,12 @@ lib.polyinterpol.restype  = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double)
 # Get user input for points
 numpoints = int(input("Enter number of points: "))
 points = []
+with open ("data.txt", "r") as f:
+    read = [ [float(inval.strip()) for inval in val.split(",")] for val in f.readlines()]
+    points = read
 
-print("Enter the points in the format 'x y': ")
-
+#print("Enter the points in the format 'x y': ")
+'''
 for i in range(numpoints):
     # Consider input a b c d, it splits it into (a,b,c,d) and store in the tuple in similar format of the datatype mentioned
     # Here it splits the input in a,b and assigns it the float datatype and stores it as (a,b) after which x is assigned a, y to b
@@ -24,6 +27,7 @@ for i in range(numpoints):
     
     # Gets added to the points collection
     points.append((x,y))
+'''
 
 # Converts points to C++-compatible format
 PointArray = ctypes.POINTER(ctypes.c_double) * numpoints
@@ -45,3 +49,4 @@ plt.ylabel("Y")
 plt.legend()
 plt.title("Neville's Interpolation Algorithm")
 plt.show()
+
