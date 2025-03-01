@@ -1,167 +1,201 @@
-// Finds the shortest path from one point to another point in a graph using Dijkstra's Algorithm
+// Finds the shortest path from one point to another point in a graph
 
+// Importing necessary libraries
 #include <iostream>
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
-#define INF 1e10 // Large value representing "infinity"
+// Taking infinity to be 10^10
+#define INF 1e10
 
-namespace py = pybind11;
 using namespace std;
 
-// Node class representing a point in the graph
-class Node {
+// Creating a node class 
+class node{
 public:
-    double coordinates[2]; // Stores x and y coordinates of the node
-    Node* previousNode; // Pointer to the previous node in the shortest path
-    double cost; // Cost to reach this node from the starting node
 
-    // Constructor initializes the node with given coordinates and default weight
-    Node(double x, double y, double weight = 1.0) {
-        coordinates[0] = x;
-        coordinates[1] = y;
-        cost = weight;
-        previousNode = nullptr;
-    }
-
-    // Computes the Euclidean distance from another node
-    double getDistance(const Node& other) const {
-        return sqrt(pow(coordinates[0] - other.coordinates[0], 2) + pow(coordinates[1] - other.coordinates[1], 2));
-    }
-
-    // Overload equality operator to compare nodes based on coordinates
-    bool operator==(const Node& other) const {
-        return coordinates[0] == other.coordinates[0] && coordinates[1] == other.coordinates[1];
-    }
-};
-
-// Edge class representing a connection between two nodes
-class Edge {
-public:
-    Node start;
-    Node end;
+    // Each node has a location, the pointer node nearest to it and a weight
+    double location[2];
+    node* nodewithshortestdist;
     double weight;
 
-    // Constructor initializes an edge between two nodes with a given weight
-    Edge(Node startNode, Node endNode, double length) : start(startNode), end(endNode), weight(length) {}
+    // Building a Constructor for node. Initially, the xcoordinate and ycoordinate are chosen with weight being default 1.0 and node nearest to it being NULL
+    node(double xcoord, double ycoord, double w = 1.0) 
+        : location{xcoord, ycoord}, weight(w), nodewithshortestdist(nullptr) {}
+
+    // Calculates distance from another node
+    double distfromnode(node& othernode){
+        double distsqre = (location[0] - othernode.location[0])*(location[0] - othernode.location[0]) + (location[1] - othernode.location[1])*(location[1] - othernode.location[1]);
+        return sqrt(distsqre);
+    }
+
+    // Defining what node1 == node2, it basically means location of both the nodes is same
+    bool operator==(const node& other) const {
+        return location[0] == other.location[0] && location[1] == other.location[1];
+    }
+
+    // Prints location of node
+    void printnode(){
+        cout << "Node location: (" << location[0] << "," << location[1] << ")" << endl;
+    }
 };
 
-// Graph class representing the map with nodes and edges
-class Graph {
+// Creating an edge class
+class edge{
+    public:
+        node startnode;
+        node endnode;
+        double edgelength;
+    
+        edge(node strnd, node endnd, double edgelen)
+            : startnode(strnd), endnode(endnd), edgelength(edgelen) {}
+
+        // Prints properties of Edge
+        void printedge(){
+            cout << "Start Node: (" << startnode.location[0] << "," << startnode.location[1] << ")" << endl;
+            cout << "End Node: (" << endnode.location[0] << "," << endnode.location[1] << ")" << endl;
+            cout << "Edge Length: " << edgelength << endl;
+        }       
+    };
+
+// Building a Map Class
+class Map{
 public:
-    vector<Node> nodes; // List of all nodes in the graph
-    vector<Edge> edges; // List of all edges in the graph
-    Node startNode; // Starting node of the path
-    Node targetNode; // Target node (destination)
 
-    // Constructor initializes the graph with nodes, edges, start, and end nodes
-    Graph(vector<Node> allNodes, vector<Edge> allEdges, Node start, Node end)
-        : nodes(allNodes), edges(allEdges), startNode(start), targetNode(end) {}
+    // Each map has a list of pointers to all nodes, pointers to all edges, the starting point and the goal
+    vector<node> allnodes;
+    vector<edge> allEdges;
+    node startpoint;
+    node endpoint;
 
-    // Dijkstra's Algorithm implementation
-    vector<Node> findShortestPath() {
-        vector<double> shortestDistances(nodes.size(), INF); // Distance from start to each node, initially set to infinity
-        vector<Node*> previousNodes(nodes.size(), nullptr); // Stores previous node in the shortest path
-        
-        // Find the index of the start node
-        int startIdx = distance(nodes.begin(), find(nodes.begin(), nodes.end(), startNode));
-        shortestDistances[startIdx] = 0; // Distance to start node is 0
+    // Building a constructor for Map Class
+    Map(vector<node> allnd, vector<edge> alledg, node strpt, node endpt)
+        : allnodes(allnd), allEdges(alledg), startpoint(strpt), endpoint(endpt) {}
 
-        // Iterate over all nodes, size_t for python wrapper purposes
-        for (size_t j = 0; j < nodes.size(); j++) {
-            double minDistance = INF;
+     // Defining Dijkstra's function with output as an array of nodes where (i+1)th element tell the location at ith step
+
+    // Rules of Dijkstra -
+    // 1. From the starting node, visit the node with the shortest distance
+    // 2. Once reached there, check the neighbouring nodes
+    // 3. Calculate the distance for the neighbouring nodes by summing the cost of the edges leading from the starting node
+    // 4. If the distance to a vertex we are checking is less than a known distance, update the shortest distance from starting point for that vertex
+    vector<node> dijkstra_directed(){
+        // Initializing things
+
+        // Assigning startIdx as the index of the starting node in the allnodes list
+        int startIdx = distance(allnodes.begin(), find(allnodes.begin(), allnodes.end(), startpoint));
+
+        // Since we dont know the distance of any node from the start, we will assume them as INF but we will keep the shortest distance for starting point as 0
+        vector<double> shortestdistfromstart(allnodes.size(), INF);
+        vector<node*> previousNodes(allnodes.size(), nullptr);
+        vector<bool> visited(allnodes.size(), false);
+
+        // Shortest distance of starting point from itself is 0
+        shortestdistfromstart[startIdx] = 0;
+
+        for(int j = 0; j < allnodes.size(); j++){
+            // Find the unvisited node with the smallest known distance
+
+            // For jth node, the node with minimum distance doesnt exist (initialzing like this)
+            double mindist = INF;
             int minIndex = -1;
 
-            // Find the node with the shortest known distance, size_t for python wrapper purposes
-            for (size_t i = 0; i < nodes.size(); i++) {
-                if (shortestDistances[i] < minDistance) {
-                    minDistance = shortestDistances[i];
+            // Iterating through all the nodes to find the node with minimum distance from the starting node
+            for (int i = 0; i < allnodes.size(); i++) {
+                if (!visited[i] && shortestdistfromstart[i] < mindist) {
+                    mindist = shortestdistfromstart[i];
                     minIndex = i;
                 }
             }
+            // Once found, we set the shortst distance for that node and set minIndex to the Index of that element
 
-            if (minIndex == -1) break; // If no valid node is found, stop the search
 
-            Node* currentNode = &nodes[minIndex];
+            // If no valid node is found, stop the search
+            if (minIndex == -1) break;
 
-            // Update distances for neighboring nodes
-            for (Edge& edge : edges) {
-                if (edge.start == *currentNode) {
-                    int neighborIdx = distance(nodes.begin(), find(nodes.begin(), nodes.end(), edge.end));
-                    if (shortestDistances[minIndex] + edge.weight < shortestDistances[neighborIdx]) {
-                        shortestDistances[neighborIdx] = shortestDistances[minIndex] + edge.weight;
+            // Else the node right now which has minimum distance from starting node is the current node
+            visited[minIndex] = true; // Mark node as visited
+            node* currentNode = &allnodes[minIndex];
+
+             // Iterating through all edges to check which edges have starting node as the node with minIndex
+            for (int i = 0; i < allEdges.size(); i++) {
+                if (allEdges[i].startnode == *currentNode) {
+                    // Once found, we check through all of them to see which node has the shortest distance from the particular node
+                    int neighborIdx = distance(allnodes.begin(), find(allnodes.begin(), allnodes.end(), allEdges[i].endnode));
+
+                    // If the distance from starting point following from the shortest node path is shorter, we will update the distance of the node from starting point
+                    // Otherwise we will leave it as it is    
+                    if (shortestdistfromstart[minIndex] + allEdges[i].edgelength < shortestdistfromstart[neighborIdx]) {
+                        shortestdistfromstart[neighborIdx] = shortestdistfromstart[minIndex] + allEdges[i].edgelength;
                         previousNodes[neighborIdx] = currentNode;
                     }
                 }
             }
-            shortestDistances[minIndex] = INF; // Mark node as visited
         }
 
-        // Reconstruct the shortest path from target to start
-        vector<Node> shortestPath;
-        Node* step = &targetNode;
+        // Reconstruct the shortest path from endpoint to startpoint by Back tracking
+        vector<node> shortestPath;
+        node* step = &endpoint;
         while (step) {
+            // Stops when null pointer is reached
             shortestPath.push_back(*step);
-            if (step == &startNode) break;
-            step = previousNodes[distance(nodes.begin(), find(nodes.begin(), nodes.end(), *step))];
+            if (step == &startpoint) break;
+            step = previousNodes[distance(allnodes.begin(), find(allnodes.begin(), allnodes.end(), *step))];
         }
         reverse(shortestPath.begin(), shortestPath.end());
         return shortestPath;
     }
+
+    // To find the shortest distance if edges are not directed, we can the direction of each edge, add it into the list of edges and run directed dijkstra
+
+    // Function to add a reversed edge for undirected graphs
+    vector<edge> edgeNondirectional(const edge edgetoChange,const vector<edge>& edgesListtoAdd) {
+        vector<edge> edgeNondirectionallist = edgesListtoAdd;
+        edge edgeReverse(edgetoChange.endnode, edgetoChange.startnode, edgetoChange.edgelength);
+        edgeNondirectionallist.push_back(edgeReverse);
+        return edgeNondirectionallist;
+    }
+
+    vector<node> dijkstra_undirected() {
+        // Create a new edges list with reversed edges added
+        vector<edge> allEdgesUndirected = allEdges;
+        
+        for (int i = 0; i < allEdges.size(); i++) {
+            allEdgesUndirected = edgeNondirectional(allEdges[i], allEdgesUndirected);
+        }
+
+        // Create a temporary map with the updated edges list
+        Map undirectedMap(allnodes, allEdgesUndirected, startpoint, endpoint);
+        
+        // Run Dijkstra on the undirected graph
+        return undirectedMap.dijkstra_directed();
+    }
+
 };
 
-/*
 int main() {
-    // Create nodes representing locations
-    Node nodeA(0, 0);
-    Node nodeB(1, 1);
-    Node nodeC(2, 2);
-    Node nodeD(3, 3);
+    node n1(0, 0);
+    node n2(1, 1);
+    node n3(2, 2);
+    node n4(3, 3);
 
-    // Create edges representing paths between nodes with distances
-    Edge edgeAB(nodeA, nodeB, 1.5);
-    Edge edgeBC(nodeB, nodeC, 2.0);
-    Edge edgeCD(nodeC, nodeD, 2.5);
-    Edge edgeAC(nodeA, nodeC, 5.5); // Alternative direct path
+    edge e1(n1, n2, 1.5);
+    edge e2(n2, n3, 2.0);
+    edge e3(n3, n4, 2.5);
+    edge e4(n3, n1, 0.5);
 
-    // Initialize graph
-    vector<Node> nodes = {nodeA, nodeB, nodeC, nodeD};
-    vector<Edge> edges = {edgeAB, edgeBC, edgeCD, edgeAC};
-    Graph myGraph(nodes, edges, nodeA, nodeD);
+    vector<node> nodes = {n1, n2, n3, n4};
+    vector<edge> edges = {e1, e2, e3, e4};
 
-    // Find and print shortest path
-    vector<Node> shortestPath = myGraph.findShortestPath();
+    Map myGraph(nodes, edges, n1, n4);
+    vector<node> shortestPath = myGraph.dijkstra_directed();
+
     cout << "Shortest path:" << endl;
-    for (const Node& n : shortestPath) {
-        cout << "(" << n.coordinates[0] << ", " << n.coordinates[1] << ") -> ";
+    for (int i = 0; i < shortestPath.size(); i++) {
+        cout << "(" << shortestPath[i].location[0] << ", " << shortestPath[i].location[1] << ") -> ";
     }
     cout << "END" << endl;
+
     return 0;
-}*/
-
-
-// **PYBIND11 Wrapper**
-PYBIND11_MODULE(dijkstra, m) {
-    py::class_<Node>(m, "Node")
-        .def(py::init<double, double, double>())
-        .def_property("x", 
-            [](const Node& n) { return n.coordinates[0]; }, 
-            [](Node& n, double value) { n.coordinates[0] = value; })
-        .def_property("y", 
-            [](const Node& n) { return n.coordinates[1]; }, 
-            [](Node& n, double value) { n.coordinates[1] = value; })
-        .def_readwrite("cost", &Node::cost);
-
-    py::class_<Edge>(m, "Edge")
-        .def(py::init<Node, Node, double>())
-        .def_readwrite("start", &Edge::start)
-        .def_readwrite("end", &Edge::end)
-        .def_readwrite("weight", &Edge::weight);
-
-    py::class_<Graph>(m, "Graph")
-        .def(py::init<vector<Node>, vector<Edge>, Node, Node>())
-        .def("findShortestPath", &Graph::findShortestPath, py::return_value_policy::move);
 }
