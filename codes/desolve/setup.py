@@ -18,9 +18,9 @@ ext_modules = [
 
 setup(
     name="linear_de",
-    version="0.1",
-    author="Your Name",
-    description="A Python module for solving linear differential equations using Euler and RK2 methods.",
+    version="1",
+    author="Abhimanyu_Koushik",
+    description="A Python module for solving linear differential equations using Euler, RK2, RK4, and Trapezoidal methods.",
     ext_modules=ext_modules,
     zip_safe=False,
 )

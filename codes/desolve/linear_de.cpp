@@ -22,7 +22,7 @@ public:
         : ode_function(func), initialvaluex0(x0), initialvaluey0(y0), stepsize(step), finalxval(finalx) {}
 
     // Euler's Method Function
-    vector<double> euler_forward() {
+    vector<double> EulerForward() {
         int size = int((finalxval - initialvaluex0) / stepsize);
         vector<double> yvals(size);
 
@@ -38,22 +38,46 @@ public:
     }
 
     // Runge-Kutta 2nd order method
-    vector<double> rk2() {
+    vector<double> RK2() {
         int size = int((finalxval - initialvaluex0) / stepsize);
         vector<double> yvals(size);
 
         double x = initialvaluex0;
         yvals[0] = initialvaluey0;
 
+        double k1, k2;
+
         for (int iter = 0; iter < size - 1; iter++) {
-            double k1 = stepsize * ode_function(x, yvals[iter]);  // Use `ode_function`
-            double k2 = stepsize * ode_function(x + stepsize, yvals[iter] + k1);
+            k1 = stepsize * ode_function(x, yvals[iter]);  // Use `ode_function`
+            k2 = stepsize * ode_function(x + stepsize, yvals[iter] + k1);
             yvals[iter + 1] = yvals[iter] + 0.5 * (k1 + k2);  // Fix integer division
             x += stepsize;
         }
 
         return yvals;
     }
+
+    vector<double> RK4() {
+        int size = int((finalxval - initialvaluex0) / stepsize);
+        vector<double> yvals(size);
+
+        double x = initialvaluex0;
+        yvals[0] = initialvaluey0;
+
+        double k1, k2, k3, k4;
+
+        for (int iter = 0; iter < size - 1; iter++) {
+            k1 = stepsize * ode_function(x, yvals[iter]);  // Use `ode_function`
+            k2 = stepsize * ode_function(x + (stepsize/2), yvals[iter] + (k1/2));
+            k3 = stepsize * ode_function(x + (stepsize/2), yvals[iter] + (k2/2));
+            k4 = stepsize * ode_function(x + stepsize, yvals[iter] + k3);
+            yvals[iter + 1] = yvals[iter] + (1.0/6) * (k1 + 2*k2 + 2*k3 + k4);  // Fix integer division
+            x += stepsize;
+        }
+
+        return yvals;
+    }
+
 };
 
 // Pybind11 module definition
@@ -64,6 +88,7 @@ PYBIND11_MODULE(linear_de, m) {
                  double, double, double, double>(),
              py::arg("func"), py::arg("x0"), py::arg("y0"),
              py::arg("finalx"), py::arg("stepsize"))
-        .def("euler_forward", &LinearDE::euler_forward)
-        .def("rk2", &LinearDE::rk2);
+        .def("EulerForward", &LinearDE::EulerForward)
+        .def("RK2", &LinearDE::RK2)
+        .def("RK4", &LinearDE::RK4);
 }
