@@ -18,7 +18,8 @@ def squarewave(t, Amplitude, timePeriod, dutyratio):
 
 x0 = 0
 y0 = 0
-finalx = 5
+R = 0.1
+finalx = 100
 stepsize = 0.01
 alpha = 0.5
 T = 1
@@ -26,7 +27,7 @@ Amplitude = 10
 
 # Define Python function f(x, y)
 def f(x, y):
-    return squarewave(x, Amplitude, T, alpha)  # dy/dx = y
+    return squarewave(x, Amplitude, T, alpha) -R*y # dy/dx = y
 
 # Create ODE solver instance
 solver = linear_de.LinearDE(f, x0, y0, finalx, stepsize)
