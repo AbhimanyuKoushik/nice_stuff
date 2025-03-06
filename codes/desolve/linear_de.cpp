@@ -9,9 +9,36 @@ namespace py = pybind11;
 using std::vector;
 using std::function;
 
+class equation {
+public:
+    function<double(double)> f; // The equation is f(x) = 0
+
+    // Constructor function
+    equation(function<double(double)> func) : f(func) {}
+
+    double newtonsolve() {
+        double guess = 0.0;
+        double limh = 1e-3;
+        double tolerance = 1e-3;
+        int max_iter = 100;
+        int iter = 0;
+
+        while (fabs(f(guess)) > tolerance && iter < max_iter) {
+            double df = (f(guess + limh) - f(guess)) / limh;
+            if (df == 0) {
+                throw std::runtime_error("Derivative is zero, Newton's method fails.");
+            }
+            guess = guess - f(guess) / df;
+            iter++;
+        }
+
+        return guess;
+    }
+};
+
 class LinearDE {
 public:
-    function<double(double, double)> ode_function;  // Renamed from `function` to `ode_function`
+    function<double(double, double)> ode_function;
     double initialvaluex0;
     double initialvaluey0;
     double stepsize;
@@ -23,14 +50,13 @@ public:
 
     // Euler's Method Function
     vector<double> EulerForward() {
-        int size = int((finalxval - initialvaluex0) / stepsize);
+        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
         vector<double> yvals(size);
-
         double x = initialvaluex0;
         yvals[0] = initialvaluey0; 
 
         for (int iter = 0; iter < size - 1; iter++) {
-            yvals[iter + 1] = yvals[iter] + stepsize * ode_function(x, yvals[iter]);  // Use `ode_function`
+            yvals[iter + 1] = yvals[iter] + stepsize * ode_function(x, yvals[iter]);
             x += stepsize;
         }
 
@@ -39,18 +65,17 @@ public:
 
     // Runge-Kutta 2nd order method
     vector<double> RK2() {
-        int size = int((finalxval - initialvaluex0) / stepsize);
+        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
         vector<double> yvals(size);
-
         double x = initialvaluex0;
         yvals[0] = initialvaluey0;
 
         double k1, k2;
 
         for (int iter = 0; iter < size - 1; iter++) {
-            k1 = stepsize * ode_function(x, yvals[iter]);  // Use `ode_function`
+            k1 = stepsize * ode_function(x, yvals[iter]);
             k2 = stepsize * ode_function(x + stepsize, yvals[iter] + k1);
-            yvals[iter + 1] = yvals[iter] + 0.5 * (k1 + k2);  // Fix integer division
+            yvals[iter + 1] = yvals[iter] + 0.5 * (k1 + k2);
             x += stepsize;
         }
 
@@ -58,26 +83,60 @@ public:
     }
 
     vector<double> RK4() {
-        int size = int((finalxval - initialvaluex0) / stepsize);
+        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
         vector<double> yvals(size);
-
         double x = initialvaluex0;
         yvals[0] = initialvaluey0;
 
         double k1, k2, k3, k4;
 
         for (int iter = 0; iter < size - 1; iter++) {
-            k1 = stepsize * ode_function(x, yvals[iter]);  // Use `ode_function`
-            k2 = stepsize * ode_function(x + (stepsize/2), yvals[iter] + (k1/2));
-            k3 = stepsize * ode_function(x + (stepsize/2), yvals[iter] + (k2/2));
+            k1 = stepsize * ode_function(x, yvals[iter]);
+            k2 = stepsize * ode_function(x + (stepsize / 2), yvals[iter] + (k1 / 2));
+            k3 = stepsize * ode_function(x + (stepsize / 2), yvals[iter] + (k2 / 2));
             k4 = stepsize * ode_function(x + stepsize, yvals[iter] + k3);
-            yvals[iter + 1] = yvals[iter] + (1.0/6) * (k1 + 2*k2 + 2*k3 + k4);  // Fix integer division
+            yvals[iter + 1] = yvals[iter] + (1.0 / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4);
             x += stepsize;
         }
 
         return yvals;
     }
 
+    vector<double> EulerBackward() {
+        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
+        vector<double> yvals(size);
+        double x = initialvaluex0;
+        yvals[0] = initialvaluey0; 
+
+        for (int iter = 0; iter < size - 1; iter++) {
+            auto update_function = [&](double yn) {
+                return yn - yvals[iter] - stepsize * ode_function(x + stepsize, yn);
+            };
+            equation update_eq(update_function);
+            yvals[iter + 1] = update_eq.newtonsolve();
+            x += stepsize;
+        }
+
+        return yvals;
+    }
+
+    vector<double> Trapezoidal() {
+        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
+        vector<double> yvals(size);
+        double x = initialvaluex0;
+        yvals[0] = initialvaluey0; 
+
+        for (int iter = 0; iter < size - 1; iter++) {
+            auto update_function = [&](double yn) {
+                return yn - yvals[iter] - stepsize * (ode_function(x + stepsize, yn) + ode_function(x, yn)) * 0.5;
+            };
+            equation update_eq(update_function);
+            yvals[iter + 1] = update_eq.newtonsolve();
+            x += stepsize;
+        }
+
+        return yvals;
+    }
 };
 
 // Pybind11 module definition
@@ -90,5 +149,11 @@ PYBIND11_MODULE(linear_de, m) {
              py::arg("finalx"), py::arg("stepsize"))
         .def("EulerForward", &LinearDE::EulerForward)
         .def("RK2", &LinearDE::RK2)
-        .def("RK4", &LinearDE::RK4);
+        .def("RK4", &LinearDE::RK4)
+        .def("EulerBackward", &LinearDE::EulerBackward)
+        .def("Trapezoidal", &LinearDE::Trapezoidal);
+
+    py::class_<equation>(m, "equation")
+        .def(py::init<function<double(double)>>())
+        .def("newtonsolve", &equation::newtonsolve);
 }
