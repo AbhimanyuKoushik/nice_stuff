@@ -50,7 +50,7 @@ public:
 
     // Euler's Method Function
     vector<double> EulerForward() {
-        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
+        int size = int((finalxval - initialvaluex0) / stepsize);
         vector<double> yvals(size);
         double x = initialvaluex0;
         yvals[0] = initialvaluey0; 
@@ -65,7 +65,7 @@ public:
 
     // Runge-Kutta 2nd order method
     vector<double> RK2() {
-        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
+        int size = int((finalxval - initialvaluex0) / stepsize);
         vector<double> yvals(size);
         double x = initialvaluex0;
         yvals[0] = initialvaluey0;
@@ -83,7 +83,7 @@ public:
     }
 
     vector<double> RK4() {
-        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
+        int size = int((finalxval - initialvaluex0) / stepsize);
         vector<double> yvals(size);
         double x = initialvaluex0;
         yvals[0] = initialvaluey0;
@@ -103,7 +103,7 @@ public:
     }
 
     vector<double> EulerBackward() {
-        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
+        int size = int((finalxval - initialvaluex0) / stepsize);
         vector<double> yvals(size);
         double x = initialvaluex0;
         yvals[0] = initialvaluey0; 
@@ -121,7 +121,7 @@ public:
     }
 
     vector<double> Trapezoidal() {
-        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
+        int size = int((finalxval - initialvaluex0) / stepsize);
         vector<double> yvals(size);
         double x = initialvaluex0;
         yvals[0] = initialvaluey0; 
