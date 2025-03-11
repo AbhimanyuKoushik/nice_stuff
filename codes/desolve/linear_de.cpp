@@ -83,7 +83,7 @@ public:
     }
 
     vector<double> RK4() {
-        int size = int((finalxval - initialvaluex0) / stepsize);
+        int size = int((finalxval - initialvaluex0) / stepsize) + 1;
         vector<double> yvals(size);
         double x = initialvaluex0;
         yvals[0] = initialvaluey0;
