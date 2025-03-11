@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.mplot3d import Axes3D  # Import for 3D plotting
 
+k = 9e9 # Coulomb's constant
+
+
 # Load the viridis colormap
 viridis = plt.colormaps['viridis']
 new_viridis = viridis(np.linspace(0, 0.8, 256))
@@ -31,7 +34,7 @@ for i in range(len(chargeValues)):
     x_charge, y_charge = chargeCoordinates[0][i], chargeCoordinates[1][i]
     q = chargeValues[i]
     distance = np.sqrt((X - x_charge) ** 2 + (Y - y_charge) ** 2)
-    Z += q / distance  # Superposition principle
+    Z += k * q / distance  # Superposition principle
 
 # Plot 3D Surface
 fig = plt.figure(figsize=(10, 7))

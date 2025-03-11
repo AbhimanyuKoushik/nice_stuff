@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 
+k = 9e9 # Coulomb's constant
+
 # Load the viridis colormap
 viridis = plt.colormaps['viridis']
 
@@ -34,8 +36,8 @@ fieldy = np.zeros((gridx, gridy))
 
 # Number of charges and their properties
 numberofCharges = 4
-chargeValues = [1, 1, -1, -1]
-chargeCoordinates = [[0, 0, 1, -1], [1, -1, 0, 0]] # (x, y) positions of charges
+chargeValues = [1, 2, -2, -1]
+chargeCoordinates = [[0, 0, 0, -1], [1, -1, 0, 0]] # (x, y) positions of charges
 
 # Compute electric field at each point on the grid
 for i in range(numberofCharges):
@@ -48,11 +50,11 @@ for i in range(numberofCharges):
             disty = Y[n, m] - y_charge
             distance = (distx**2 + disty**2) ** 0.5
 
-            fieldx[n, m] += q * distx / (distance ** 3)
-            fieldy[n, m] += q * disty / (distance ** 3)
+            fieldx[n, m] += k * q * distx / (distance ** 3)
+            fieldy[n, m] += k * q * disty / (distance ** 3)
 
 # Compute arrow colors based on field magnitude
-C = np.hypot(fieldx, fieldy)  # Magnitude of field vectors
+C = np.log1p(np.hypot(fieldx, fieldy))  # Magnitude of field vectors
 
 # Normalize field vectors to unit length to show direction
 field_magnitude = np.sqrt(fieldx**2 + fieldy**2)
@@ -72,7 +74,7 @@ plt.quiver(X, Y, fieldx, fieldy, C, pivot='mid', cmap=custom_cmap)
 
 # Add colorbar
 cbar = plt.colorbar()
-cbar.ax.set_ylabel('Field Magnitude')
+cbar.ax.set_ylabel('Log(Field Magnitude+1)')
 
 plt.xlim(xmin, xmax)
 plt.ylim(ymin, ymax)
