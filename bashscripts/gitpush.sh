@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Just the command gitpush <commit message> pushes all the changes with the given commit message, if the commit message is empty, it is set to the default message 'commit'
 
 #Make sure to run the below commands in the repo before using it
