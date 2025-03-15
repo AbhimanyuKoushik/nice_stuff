@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 
 rodLength = 10 # Length of Rod
-maxTime = 0.5 # Time till which simulation will run
+maxTime = 0.75 # Time till which simulation will run
 lengthNodes = 150 # The rod is divided into 150 parts, we discretized the system
 alpha = 10 # Thermal Conductivity
 dx = rodLength / lengthNodes # Length of a small part of rod
@@ -66,7 +66,7 @@ def animate(frame):
     # 3 decimals are printed
     return heatmap, title
 
-ani = anim.FuncAnimation(fig, animate, frames = range(0, timeNodes, 50), interval = dt * 1e3, blit=False)
+ani = anim.FuncAnimation(fig, animate, frames = range(0, timeNodes, 10), interval = dt * 1e3, blit=False)
 # A frame is one plot of history[t], One frame is shown for the time t = interval, Right now I am displaying only
 # 1 in 10 frames so that animation goes fast otherwise its too slow
 # blit = True means the function redraws only the changed parts of figure, faster but doesn't work in case there are elements

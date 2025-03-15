@@ -1,0 +1,736 @@
+
+\documentclass[a4paper,12pt]{article}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{txfonts}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{gensymb}
+\usepackage{comment}
+\usepackage[breaklinks=true]{hyperref}
+\usepackage{tkz-euclide} 
+\usepackage{listings}
+\usepackage{gvv}                                        
+%\def\inputGnumericTable{}                                 
+\usepackage[latin1]{inputenc}     
+\usepackage{xparse}
+\usepackage{color}                                            
+\usepackage{array}                                            
+\usepackage{longtable}                                       
+\usepackage{calc}                                             
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{hhline}                                           
+\usepackage{ifthen}                                           
+\usepackage{lscape}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{problem}{Problem}
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{example}{Example}[section]
+\newtheorem{definition}[problem]{Definition}
+\newcommand{\BEQA}{\begin{eqnarray}}
+\newcommand{\EEQA}{\end{eqnarray}}
+\newcommand{\define}{\stackrel{\triangle}{=}}
+\theoremstyle{remark}
+\newtheorem{rem}{Remark}
+
+\begin{document}
+\title{Software Assignment - Computing Eigenvalues of $N \times N$ Matrix}
+\author{EE24Btech11024 - G. Abhimanyu Koushik}
+\maketitle
+\renewcommand{\thefigure}{\theenumi}
+\renewcommand{\thetable}{\theenumi}
+
+\section*{Introduction}
+An $N\times N$ matrix $A$ is said to have an eigenvector $\vec{x}$ and corresponding eigenvalue $\lambda$ if
+\begin{align}
+	A\cdot\vec{x} = \lambda\vec{x}
+\end{align}
+Any multiple of an eigenvector is also an eigenvector, but we will not be considering such multiples as disticnt vectors.\\
+Evidently equation \brak{1} holds only if
+\begin{align}
+	\det\abs{A-\lambda I} = 0
+\end{align}
+which, if expanded out, is an $N^{\text{th}}$ degree polynomial equation in $\lambda$ whose roots are eigenvalues. Root searching in the characteristic equation \brak{2} is a very poor computational method of finding eigenvalues.\\
+The above two equations show that there is a corresponding eigenvector or every eigenvalue: If $\lambda$ is set to an eigenvalue then the matrix $A-\lambda I$ is singular so it has atleast one non-zero vector in its nullspace.\\
+A matrix is called symmetric if it is equal to its transpose.
+\begin{align}
+	A = A^\top
+\end{align}
+A matrix is called orthogonal if its inverse is equal to its transpose.
+\begin{align}
+	A^\top\cdot A = A\cdot A^\top = I
+\end{align}
+Multiply two orthogonal matrices gives another orthogonal matrix.
+The eigenvalues of symmetric values are all real. The eigenvalues of a non-symmetric matrix can be complex. 
+\subsection*{Diagonalization of a Matrix}
+A matrix is said to undergo Similarity transformation if it undergoes the following process.
+\begin{align}
+	A \implies Z^{-1}\cdot A\cdot Z
+\end{align}
+For some matrix $Z$. When a matrix undergoes similarity transform, the eigenvalues of the matrix remain unchanged.
+\begin{align}
+	\det\abs{Z^{-1}\cdot A\cdot Z - \lambda I} &= \det\abs{Z^{-1}\cdot A\cdot Z - \lambda Z^{-1}\cdot I\cdot Z}\\
+		&= \det\abs{Z^{-1}\brak{A - \lambda I }Z}\\
+		&= \det\abs{Z^{-1}}\det\abs{A - \lambda I}\det\abs{Z}\\
+		&= \det\abs{A - \lambda I} 
+\end{align}
+If a matrix undergoes similarity transform, the properties like symmetry, normality, unitary remain preserved..
+For a matrix $A$, let the eigen values be $\lambda_1, \lambda_2,\dots,\lambda_N$, then we can write the following equation.
+\begin{align}
+	X\cdot A= \text{diag}\brak{\lambda_1, \lambda_2,\dots,\lambda_N}\cdot X\\
+\end{align}
+where RHS is a diagonal matrix with entries $\lambda_1, \lambda_2,\dots,\lambda_N$, if we multiply with $X^{-1}$ on both side we will get
+\begin{align}
+	X \cdot A \cdot X^{-1} = \text{diag}\brak{\lambda_1, \lambda_2,\dots,\lambda_N}
+\end{align}
+This is the basis for Jacobian Transformation
+
+\section{Jacobian Transformation}
+The Jacobian transformation consists of a sequence of orthogonal similarity transformation \brak{X \text{ is orthogonal}} to tranform matrix $A$ into a diagonal matrix. Each orthogonal transformation is designed to annilate one off-diangonal element. Successive tranformations might undo previously set zeroes but the off-diagonal elements nevertheless get smaller and smaller, until the matrix is diagonal to machine precision.
+
+\subsection{Mathematical Background}
+Let $A$ be a symmetric matrix. The Jacobian method aims to diagonalize $A$ into:
+\begin{align}
+A = V \Lambda V^\top
+\end{align}
+where $\Lambda$ is a diagonal matrix of eigenvalues, and $V$ is an orthogonal matrix of eigenvectors.
+The rotation matrix $P_{pq}$ is defined as:
+\begin{align}
+P_{pq} = \myvec{
+1 & \cdots & 0 & 0 & \cdots & 0 \\
+\vdots & \ddots & \vdots & \vdots & \reflectbox{$\ddots$} & \vdots \\
+0 & \cdots & c & s & \cdots & 0\\
+0 & \cdots & -s & c & \cdots & 0\\
+\vdots & \reflectbox{$\ddots$} & \vdots & \vdots & \ddots & \vdots\\
+0 & \cdots & 0 & 0 & \cdots & 1
+}
+\end{align}
+Here all diagonal elements are 1 except for the two elements $c$ in rows \brak{\text{and columns}} $p$ and $q$. All off-diagonal elements are 0 except for $s$ and $-s$. The numbers $c$ and $s$ are the cosine and sine of rotation angle $\phi$, so $c^2+s^2=1$.\\
+A plane rotation such as $P_{pq}$ in equation \brak{14} is used to transform matrix $A$ according to
+\begin{align}
+	A^\prime = P_{pq}^\top A P_{pq}
+\end{align} 
+Now, $P_{pq}^\top A$ changes only rows $p$ and $q$ of $A$., while $AP_{pq}$ change only the columns $p$ and $q$. Thus the changed elements of $A$ in equation \brak{15} are only in $p$ and $q$ rows and columns indicated as below
+\begin{align}
+	A^\prime =\myvec{
+ & \cdots & a_{1p}^\prime & \cdots & a_{1q}^\prime & \cdots & \\
+\vdots &  & \vdots & & \vdots & & \vdots \\
+a_{p1}^\prime & \cdots & a_{pp}^\prime & \cdots & a_{pq}^\prime & \cdots & a_{pn}^\prime\\
+\vdots & & \vdots & & \vdots & & \vdots\\
+a_{q1}^\prime & \cdots & a_{qp}^\prime & \cdots & a_{qq}^\prime & \cdots & a_{qn}^\prime\\
+\vdots & & \vdots & & \vdots & & \vdots \\
+& \cdots & a_{np}^\prime & \cdots & a_{nq}^\prime & \cdots& }
+\end{align}
+Multiplying equation \brak{15} and using the symmetry of $A$ will get us the equations
+\begin{align}
+a_{rp}^\prime &= ca_{rp} - sa_{rq}\\
+a_{rq}^\prime &= ca_{rq} + sa_{rp}\\
+a_{pp}^\prime &= c^2a_{pp} + s^2a_{qq} - 2sca_{pq}\\
+a_{qq}^\prime &= c^2a_{pp} + s^2a_{qq} + 2sca_{pq}\\
+a_{pq}^\prime &= \brak{c^2-s^2}a_{pq} +sc\brak{a_{pp}-a_{qq}} 
+\end{align}
+for $r \neq s$. Accordingly, if we set $a_{pq}^\prime = 0$, equation \brak{21} gives the following expression
+\begin{align}
+	\theta = \cot{2\phi} = \frac{c^2-s^2}{2sc} = \frac{a_{qq}-a_{pp}}{2a_{pq}}
+\end{align}
+If we let $t = \frac{s}{c}$, the definition of $\theta$ can be written as 
+\begin{align}
+	t^2+2t\theta - 1=0
+\end{align}
+We get $t$ as the following value if we consider the smaller root
+\begin{align}
+	t = \frac{sgn\brak{\theta}}{\abs{\theta}+\sqrt{\theta^2+1}}
+\end{align}
+It now follows that 
+\begin{align}
+	c&=\frac{1}{\sqrt{t^2+1}}\\
+	s&=\frac{t}{\sqrt{t^2+1}}
+\end{align}
+Once we substitute the $c$ and $s$ in the matrix and multiply as given in equation \brak{15}, the $a_{pq}^\prime$ gets nulled. We not do the same thing for all the other elements as well. Since the matrix is symmetric, there is no need to iterate through every off-diagonal element. Just going through the lower triangular indexed elements would be enough as it will automatically null upper triangular ones as well.\\
+One can see the convergence of Jacobi method by considering sum of square of off-diagonal elements.
+\begin{align}
+	S = \sum_{r\neq s}\abs{a_{rs}}^2
+\end{align}
+The new sum after an iteration will be
+\begin{align}
+	S^\prime = S - 2\abs{a_{pq}}^2 
+\end{align}
+Since the sequence is monotonically decreasing and is bounded below by 0, it coverges to 0.\\
+Eventually, one obtains a matrix $D$ which is diagonal to machine precision. The elements of the matrix $D$ will be the eigenvalues of $A$ since
+\begin{align}
+	D = V^\top A V
+\end{align}
+where
+\begin{align}
+	V = P_1\cdot P_2\cdot P_3 \cdots 
+\end{align}
+One set of $\frac{n\brak{n-1}}{2}$ set of Jacobi rotations is called a sweep, nulling every lower triangular element once. We will implement 8 sweeps so as to make sure the elements are nulled completely and then stop.
+\subsection{Code}
+Below is the implementation of the Jacobian transformation in C:
+\begin{verbatim}
+double **jacobian(double **A, int dim) {
+    double **jacobian = copyMat(A, dim, dim);
+    double threshold = 1e-10;
+\end{verbatim}
+Initialising jacobian matrix \brak{\text{The diagonal matrix}}, and keep a threshold.
+\begin{verbatim}
+    for (int sweep = 0; sweep < 8; sweep++) {
+        for (int p = 1; p < dim; p++) {
+            for (int q = 0; q < p; q++) {
+                if (fabs(jacobian[p][q]) > threshold) {
+\end{verbatim}
+Applying jacobian transform 8 times, and iterating through each lower triangular element and applying transformation if its absolute value is greater than threshold (basically greater than 0).
+\begin{verbatim}
+double theta = (jacobian[q][q] - jacobian[p][p]) / (2 * jacobian[p][q]);
+double sgn = (theta != 0) ? (theta > 0 ? 1 : -1) : 0;
+double t = sgn / (fabs(theta) + sqrt(theta * theta + 1));
+double c = 1 / sqrt(t * t + 1);
+double s = t / sqrt(t * t + 1);
+\end{verbatim}
+Calculating the values of $c$,$s$,$t$ and $\theta$.
+\begin{verbatim}
+                    double **Ppq = identity(dim);
+                    Ppq[p][p] = c;
+                    Ppq[p][q] = s;
+                    Ppq[q][p] = -s;
+                    Ppq[q][q] = c;
+
+\end{verbatim}
+Forming the matrix $P_{pq}$.
+\begin{verbatim}
+                    jacobian = Matmul(jacobian, Ppq, dim, dim, dim);
+                    double **PpqT = transposeMat(Ppq, dim, dim);
+                    jacobian = Matmul(PpqT, jacobian, dim, dim, dim);
+\end{verbatim}
+Assigning new $A$ as $P_{pq}^\top A P_{pq}$ 
+\begin{verbatim}
+                    freeMat(Ppq, dim);
+                    freeMat(PpqT, dim);
+                }
+\end{verbatim}
+Free the matrices
+\begin{verbatim}
+                else{
+                	jacobian[p][q] = 0;
+                }
+            }
+        }
+    }
+    return jacobian;
+}
+\end{verbatim}
+Assigning the values 0 if they are less than threshold, and return the diagonal matrix
+
+\section{Hessenberg Reduction}
+Jacobian is a very inefficient way of finding the eigenvalues as its time complexity is $O\brak{n^4}$ and its use is very limited as it can only be used to find the eigenvalues of real and symmetric matrices. For finding the eigen values of a non-symmetric, the best way is to reduce the matrix to a suitable form and then apply QR decomposition algorithm to that, which the will be explained later. This is suitable for turns out to be Hessenberg form. Turning a matrix into hessenberg form is a process of time complexity $O\brak{n^3}$, and then applying QR decomposition on hessenberg is of time complexity $O\brak{n^2}$. Hence the actual time complexity of order $O\brak{n^3}$.
+
+\subsection{Mathematical Background}
+We say a matrix $A$ is in hessenberg form if it is in form shown below
+\begin{align}
+H = 
+\myvec{
+\times & \times & \times & \cdots & \times \\
+\times & \times & \times & \cdots & \times \\
+0      & \times & \times & \cdots & \times \\
+0      & 0      & \times & \cdots & \times \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0      & 0      & 0      & \cdots & \times
+}
+\end{align}
+We will use householder method to reduce any matrix into hessenberg form.\\
+It reduces an $n\times n$ matrix to hessenberg form by $n-2$ orthogonal trasformations. Each transformations annihilates the required part of a whole column at a time rather than element wise elimination. The basic ingredient for a house holder matrix is $P$ which is in the form
+\begin{align}
+	P = I-2\vec{w}\vec{w}^\top
+\end{align}
+where w is a vector with $\abs{w}^2=1$. The matrix $P$ is orthogonal as
+\begin{align}
+P^2 &=\brak{I - 2\vec{w}\vec{w}^\top}\cdot\brak{I - 2\vec{w}\vec{w}^\top}\\
+    &=I-4\vec{w}\vec{w}^\top + 4\vec{w}\cdot\brak{\vec{w}^\top\vec{w}^\top}\cdot\vec{w}^\top\\
+    &=I
+\end{align}
+Therefore, $P=P^{-1}$ but $P = P^\top$, so $P = P^\top$ \\
+We can rewrite $P$ as
+\begin{align}
+	P = I - \frac{\vec{u}\vec{u}^\top}{H}
+\end{align}
+where the scalar $H$ is
+\begin{align}
+H = \frac{1}{2}\abs{\vec{u}}^2
+\end{align}
+Where $\vec{u}$ can be any vector. Suppose $\vec{x}$ is the vector composed of the first column of $A$. Take
+\begin{align}
+	\vec{u} = \vec{x} \mp \abs{\vec{x}}\vec{e}_1
+\end{align}
+Where $\vec{e}_1 = \myvec{1 & 0 & \dots}^\top$, we will take the choice of sign later. Then
+\begin{align}
+	P\cdot\vec{x} &= \vec{x} - \frac{\vec{u}}{H}\cdot\brak{\vec{u}\mp \abs{\vec{x}}\vec{e}_1}^\top\cdot \vec{x}\\
+	              &= \vec{x} - \frac{2\vec{u}\brak{\abs{x}^2\mp \abs{x}x_1}}{2\abs{x}^2\mp \abs{x}x_1}\\
+	              &= \vec{x} - \vec{u}\\
+	              &= \mp\abs{\vec{x}}\vec{e}_1
+\end{align}
+To reduce a matrix $A$ into Hessenberg form, we choose vector $\vec{x}$ for the first householder matrix to be lower $n-1$ elements of the first column, then the lower $n-2$ elements will be zeroed.
+\begin{align}
+P_1\cdot A &= \myvec{
+1 & 0 & 0 & \cdots & 0 \\
+0 & p_{11} & p_{12} & \cdots & p_{1n} \\
+0      & p_{21} & p_{22} & \cdots & p_{2n} \\
+0      & p_{31} & p_{32} & \cdots & p_{3n} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0      & p_{n1} & p_{n2} & \cdots & p_{nn}
+}\myvec{
+a_{00} & \times & \times & \cdots & \times \\
+a_{10} & \times & \times & \cdots & \times \\
+a_{20} & \times & \times & \cdots & \times \\
+a_{30} & \times & \times & \cdots & \times \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+a_{n0} & \times & \times & \cdots & \times
+}\\
+&=\myvec{
+a_{00}^\prime & \times & \times & \cdots & \times \\
+0 & \times & \times & \cdots & \times \\
+0      & \times & \times & \cdots & \times \\
+0      & \times   & \times & \cdots & \times \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0      & \times      & \times      & \cdots & \times
+}
+\end{align}
+Now if we multiply the matrix $P_1A$ with $P_1$, the eigenvalues will be conserved as it is a similarity transformation.\\
+Now we choose the vector $\vec{x}$ for the householder matrix to be the bottom $n-2$ elements of the second column, and from it construct the $P_2$
+\begin{align}
+P_2 = \myvec{
+1 & 0 & 0 & \cdots & 0 \\
+0 & 1 & 0 & \cdots & 0 \\
+0 & 0 & p_{22} & \cdots & p_{2n} \\
+0 & 0 & p_{32} & \cdots & p_{3n} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & p_{n2} & \cdots & p_{nn}
+}
+\end{align}
+Now if do similarity transform $PAP$, we will zero out the $n-3$ elements in second column.
+If we continue this pattern we will get the hessenberg form of a the matrix $A$.
+\subsection{Code}
+\begin{verbatim}
+double complex **makehessberg(double complex **A, int dim) {
+    double complex **toreturn = copyMat(A, dim, dim);
+\end{verbatim}
+Copying inputted matrix to toreturn;
+\begin{verbatim}
+    for (int k = 0; k < dim - 2; k++) {
+        int u_dim = dim - k - 1;
+        double complex **u = createMat(u_dim, 1);
+        for (int i = 0; i < u_dim; i++) {
+            u[i][0] = toreturn[k + 1 + i][k];
+        }
+\end{verbatim}
+Making a loop for $n-2$ iteration and initializing $\vec{u}$ to the required subcolumn vector of $A$ 
+\begin{verbatim}        
+        double complex rho;
+        if(cabs(u[0][0])!=0){
+        	rho = - u[0][0] / cabs(u[0][0]);
+        }
+        else{
+        	rho = 1;
+        }
+        u[0][0] += -1 * rho * Matnorm(u, u_dim);
+\end{verbatim}
+Substituting $\vec{u}=\vec{x}-\abs{\vec{x}}\vec{e}_1$
+\begin{verbatim}
+        double norm_u = Matnorm(u, u_dim);
+        if (norm_u != 0.0) {
+         	   for (int i = 0; i < u_dim; i++) {
+                u[i][0] /= norm_u;
+            }
+        }
+        else{
+        	continue;
+        }
+\end{verbatim}
+Making $\vec{u}$ an unit vector and if norm of $\vec{u}=0$, skipping the process as the column is already in required form
+\begin{verbatim}
+        double complex **Hk = identity(dim);
+        double complex **u_transpose = transposeMat(u, u_dim, 1);
+        double complex **u_ut = Matmul(u, u_transpose, u_dim, 1, u_dim);
+
+        for (int i = 0; i < u_dim; i++) {
+            for (int j = 0; j < u_dim; j++) {
+                Hk[k + 1 + i][k + 1 + j] -= 2 * u_ut[i][j];
+            }
+        }
+\end{verbatim}
+Forming the Householder matrix
+\begin{verbatim}
+        toreturn = Matmul(Hk, toreturn, dim, dim, dim);
+        toreturn = Matmul(toreturn, Hk, dim, dim, dim);
+\end{verbatim}
+Using similarity trasformation with Householder matrix to $A$.
+\begin{verbatim}
+        freeMat(u, u_dim);
+        freeMat(u_transpose, 1);
+        freeMat(u_ut, u_dim);
+        freeMat(Hk, dim);
+    }
+    return toreturn;
+}
+\end{verbatim}
+Freeing the matrices and returning the hessenberg form of $A$.
+\section{QR Decomposition Algorithm}
+\subsection{Mathematical Background}
+In this algorithm, we decompose matrix given in Hessenberg form to two matrices $Q$ and $R$ such that $Q$ is an orthogonal matrix and $R$ is an upper triangular matrix. Then we assign the new matrix $A^\prime$ to be $A^\prime = RQ$, and we do this iteratively. Theoritically, as the number of iterations go to infinite, the matrix $A^\prime$ will converge to an upper triangular matrix whose diagonal elements are the eigenvalues of $A$. There will be a minor problem in this method when the entries are real while the eigenvalues are complex, we will solve this issue shortly. The eigenvalues of the matrix $A$ will not change because of the following
+\begin{align}
+	A &= QR\\
+	R &= Q^\top A\\
+	A^\prime &= RQ\\
+	A^\prime &= Q^\top AQ
+\end{align}
+As the matrix $A$ is undergoing similarity transformation, the eigenvalues will not change.\\
+The rate of covergence of $A$ depends on the ratio of absolute values of the eigenvalues. That is, if the eigenvalues are $\abs{\lambda_1} \geq \abs{\lambda_2} \geq \abs{\lambda_3} \dots \geq \abs{\lambda_n}$ then, the elements of $A_k$ below the diagonal to converge to zero like
+\begin{align}
+    \abs{a_{ij}^{\brak{k}}} = O\brak{\abs{\frac{\lambda_i}{\lambda_j}}^k}\text{    } i > j
+\end{align}
+
+\subsection{Givens Rotations}
+The QR decomposition is implemented using the Givens rotation technique. This approach is robust and numerically stable, making it ideal for QR decomposition, especially in iterative methods like eigenvalue computations. It is every similar to Jacobian Transformation. We define a rotation matrix $G$, to zero out the elements which are non-diagonal, since the matrix which we are dealing is a Hessenberg matrix, we need to zero out the elements which are just below the diagonal elements. This shows the significance of Hessenberg form. Initially we zeroed complete columns at once. If we were to apply givens to each and every element, it will take $\frac{n\brak{n-1}}{2}$ orthogonal rotations. Now, computing $G$ and the new $A$, costs in order $O\brak{n^2}$. The whole process together would be in cost of order $O\brak{n^4}$. But now since we only need to do $n-1$ orthogonal rotations, the order becomes $O\brak{n^3}$. The rotation matrix $G$ is defined as 
+\begin{align}
+G = \myvec{
+1 & \cdots & 0 & 0 & \cdots & 0 \\
+\vdots & \ddots & \vdots & \vdots & \reflectbox{$\ddots$} & \vdots \\
+0 & \cdots & c & s & \cdots & 0\\
+0 & \cdots & -s & c & \cdots & 0\\
+\vdots & \reflectbox{$\ddots$} & \vdots & \vdots & \ddots & \vdots\\
+0 & \cdots & 0 & 0 & \cdots & 1
+}
+\end{align}
+Where the value of $c$ and $s$ are
+\begin{align}
+	c = \frac{\overline{x_{i,i}}}{\sqrt{\abs{x_{i,i}}^2+\abs{x_{i,i+1}}^2}}\\
+	s = \frac{\overline{x_{i,i+1}}}{\sqrt{\abs{x_{i,i}}^2+\abs{x_{i,i+1}}^2}}
+\end{align}
+If we multiply $G$ and $A$, we can see easily that it nulls out the element in $\brak{i+1}^{\text{th}}$ row and $i^\text{th}$ column. The following matrix multiplication eliminates all the elements below the diagonal of $A$
+\begin{align}
+	A \implies G_nG_{n-1}\cdots G_2G_1A
+\end{align}
+Now, we store $G_nG_{n-1}\cdots G_2G_1$ in $Q$ and then
+\begin{align}
+	A^\prime \implies QAQ^\top\\
+\end{align}
+If we carry out these transformation infinite times, the $A$ will be an upper triangular matrix with diagonal elements as eigenvalues.
+\subsection{Jordan Blocks}
+If all the entries in the matrix are real but the eigenvalues are complex, the matrix $A$ will converge to a Quasi-triangular form, that is
+\begin{align}
+	A = \myvec{B_1 & 0 & \cdots & 0 \\
+		   0 & B_2 & \cdots & 0\\
+		   \vdots & \cdots & \ddots & 0\\
+		   0 & 0 & 0 & B_n}
+\end{align}
+Where $B_i$ is a $2 \times 2$ block matrix. These matrices are called jordan blocks. In this case, the eigenvalues are calculated by solving the characteristic equation of the $2 \times 2$ matrix. Since it will be a quadratic equation, it can be easily solved and the solutions of that characteristic equation will be the eigenvalues. 
+\subsection{Code}
+\begin{verbatim}
+double complex **qr_converge(double complex **A, int dim) {
+    double complex **H = makehessberg(A, dim);
+    double tolerance = 1e-12;
+\end{verbatim}
+Transforming $A$ into hessenberg form
+\begin{verbatim}
+    for(int i = 0; i < 20*dim; i++){
+    	double complex **Q_T = identity(dim);
+\end{verbatim}
+Inititalizing $Q^\top$ and initializing the QR decomposition to run $20\times n$ times where $n$ is the dimension of the matrix
+\begin{verbatim}
+    	for (int p = 1; p < dim; p++){
+		double complex xi = H[p-1][p-1];
+		double complex xj = H[p][p-1];
+		if(cabs(xi)<0 && cabs(xi)<0){
+			continue;
+		}
+\end{verbatim}
+Skipping the iteration if both the elements are already nulled
+\begin{verbatim}
+		double complex c = conj(xi)/(csqrt(cabs(xi)*cabs(xi)+cabs(xj)*cabs(xj)));
+		double complex s = conj(xj)/(csqrt(cabs(xi)*cabs(xi)+cabs(xj)*cabs(xj)));
+\end{verbatim}
+Finding the values of $c$ and $s$
+\begin{verbatim}
+		double complex **Gi = identity(dim);
+		Gi[p-1][p-1] = c;
+		Gi[p-1][p] = s;
+		Gi[p][p-1] = -conj(s);
+		Gi[p][p] = conj(c);
+\end{verbatim}
+Forming the Givens matrix
+\begin{verbatim}
+		H = Matmul(Gi,H,dim,dim,dim);
+		Q_T = Matmul(Q_T,transposeMat(Gi,dim,dim),dim,dim,dim);
+    	}
+    	H = Matmul(H,Q_T,dim,dim,dim);
+    }
+    return H;
+}
+\end{verbatim}
+Find $Q$ and then transforming the hessenberg matrix to $QHQ^\top$ for number of iteration times and then returning the converged matrix
+\begin{verbatim}
+void calcuppereig(double complex **A, int dim) {
+\end{verbatim}
+Function for printing eigenvalues of a triangular or Quasi-triangular matrix
+\begin{verbatim}
+    int count = 1;
+    for (int i = 0; i < dim; i++) {
+        if (i < dim - 1 && cabs(A[i + 1][i]) > 1e-12) {
+            double complex x1 = A[i][i];
+            double complex x2 = A[i + 1][i + 1];
+            double complex y1 = A[i + 1][i];
+            double complex y2 = A[i][i + 1];
+\end{verbatim}
+Checking if the element is a part of jordan block or not. If it is, then assigning the jordan block values to some variables
+\begin{verbatim}
+            double complex a = 1.0;
+            double complex b = -(x1 + x2);
+            double complex c = x1 * x2 - y1 * y2;
+\end{verbatim}
+Coefficients of the quadratic characteristic equation $x^2 - \brak{x_1+x_2}x + \brak{x_1x_2-y_1y_2} = 0$
+\begin{verbatim}
+double complex eigenvalue1 = (-b + csqrt(b * b - 4.0 * a * c)) / (2.0 * a);
+double complex eigenvalue2 = (-b - csqrt(b * b - 4.0 * a * c)) / (2.0 * a);
+\end{verbatim}
+Solving the equation
+\begin{verbatim}
+if(cabs(eigenvalue2)>1e-12){
+printf("Eigenvalue %d:%.9lf+%.9lfi\n",count
+,creal(eigenvalue1),cimag(eigenvalue1));
+   }
+else{
+printf("Eigenvalue %d: 0.000000000 + 0.000000000i\n", count);
+   }      
+if(cabs(eigenvalue2)>1e-12){
+printf("Eigenvalue %d: %.9lf + %.9lfi\n", count + 1,
+	creal(eigenvalue2), cimag(eigenvalue2));
+   }
+else{
+   printf("Eigenvalue %d: 0.000000000 + 0.000000000i\n", count+1);
+}
+count += 2;
+i++;
+}
+\end{verbatim}
+Printing the values and skipping the next row as it will also be part of same jordan block.
+\begin{verbatim}
+        else{
+        	if(cabs(A[i][i])>1e-12){
+            		printf("Eigenvalue %d: %.9lf + %.9lfi\n", count,
+            			creal(A[i][i]), cimag(A[i][i]));
+            	}
+            	else{
+            		printf("Eigenvalue %d: 0.000000000 + 0.000000000i\n", count);
+            	}
+            count++;
+        }
+    }
+}
+
+\end{verbatim}
+In the other case, just printing the diagonal elements as they are the eigenvalues.
+\section{Rayleigh Quotient Iteration}
+\subsection{Mathematical Background}
+The major defect in QR decomposition algorithm is that sometimes the rate of convergence is very low. The idea behind Rayleigh Quotient method is really simple, since the rate of convergence is low, we will increase the rate of convergence by making a shift. According to the order of rate of covergence given in equation \brak{50}, if null of the last element \brak{\lambda_i=0} the order of convergence will be very high. So what we do is we shift the Hessenberg matrix by some amount, apply QR decomposition algorithm and add the shift back. If this shift is exactly the eigenvalue then it completes in very less number of iteration (best case, only 1 iteration). But since we do not know the eigenvalue, we will take the guess to be the last diagonal element.
+\begin{align}
+	H^\prime &= H - \sigma I\\
+	H^\prime &\implies {H^\prime}_{tranformed}\\
+	H_{next} &= {H^\prime}_{tranformed} + \sigma I
+\end{align}
+This method does not change the eigenvalues as
+\begin{align}
+\overline{H} &= Q\brak{H - \lambda I}Q^\top\\
+	&= QHQ^\top - \lambda QIQ^\top\\
+	&= QHQ^\top - \lambda I\\
+\overline{H} +\lambda I &= QHQ^\top
+\end{align}
+which is a similarity tranformation.\\
+Here, once we finding the eigenvalue and it is in the last diagonal element, we will leave it as it is and then focus on smaller matrix block present diagonally above the eigenvalue and then use the same technique to push the next eigenvalue to the next diagonal element. We will continue to do this till all the eigenvalues are present in the diagonal. This is know as deflation.
+\begin{align}
+H  - \lambda I = QR\\
+R = \myvec{\times & \times & \cdots & \times\\
+	0 & \times & \cdots & \times\\
+	\vdots & \vdots & \ddots & \times\\
+	0 & 0 & \cdots & 0}
+\end{align}
+$RQ$ Will also be in the same form
+\begin{align}
+\overline{H} = RQ+\lambda I = \myvec{\overline{H_1} & \vec{h}_1\\0^\top & \lambda}
+\end{align}
+\subsection{Code}
+\begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+#include <complex.h>
+#include <math.h>
+#include "functions.h"
+
+double complex **qr_converge_rayleigh(double complex **A, int dim) {
+    double complex **H = makehessberg(A, dim);
+    double complex sigma;
+    double tolerance = 1e-10;
+
+    for (int m = dim; m > 1; m--) {
+        int iterations = 0;
+
+        while (iterations < 20*dim) {
+            iterations++;
+            sigma = H[m-1][m-1];
+\end{verbatim}
+Every thing is same as in QR except we will introduce a shift and then remove the shift at the end of each iteration. We are choose the shift to be the last diagonal element of current $\overline{H}$
+\begin{verbatim}
+     double complex **sigmaI = Matscale(identity(dim), dim, dim, sigma);
+     double complex **H_shifted = Matsub(H, sigmaI, dim, dim);
+     double complex **Q_T = identity(dim);
+\end{verbatim}
+Introducing the shift.
+\begin{verbatim}
+  for (int p = 1; p < m; p++) {
+       double complex xi = H_shifted[p-1][p-1];
+       double complex xj = H_shifted[p][p-1];
+
+       if (cabs(xj) < tolerance) {
+                   continue;
+        }
+                
+     double complex c = conj(xi)/(csqrt(cabs(xi)*cabs(xi)+cabs(xj)*cabs(xj)));
+     double complex s = conj(xj)/(csqrt(cabs(xi)*cabs(xi)+cabs(xj)*cabs(xj)));
+       	
+       double complex **Gi = identity(dim);
+       Gi[p-1][p-1] = c;
+       Gi[p-1][p] = s;
+       Gi[p][p-1] = -conj(s);
+       Gi[p][p] = conj(c);
+           
+       H_shifted = Matmul(Gi, H_shifted, dim, dim, dim);
+       Q_T = Matmul(Q_T, transposeMat(Gi, dim, dim), dim, dim, dim);
+       freeMat(Gi, dim);
+   }
+
+       H = Matmul(H_shifted, Q_T, dim, dim, dim);
+       H = Matadd(H, sigmaI, dim, dim);
+\end{verbatim}
+Adding back the shift
+\begin{verbatim}
+
+            freeMat(sigmaI, dim);
+            freeMat(H_shifted, dim);
+            freeMat(Q_T, dim);
+
+                if (cabs(H[m-1][m-2]) > tolerance) {
+                    continue;
+                }
+                else{
+                	break;
+                }
+        }
+    }
+    return H;
+}
+\end{verbatim}
+Returning the upper triangular matrix
+\subsection{Final code}
+\begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+#include <complex.h>
+#include <math.h>
+#include "functions.h"
+
+void eigenvalues(double complex **A, int dim) {
+    double complex **H = makehessberg(A, dim);
+    double complex sigma;
+    double tolerance = 1e-10;
+
+    for (int m = dim; m > 1; m--) {
+        int iterations = 0;
+
+        while (iterations < 20*dim) {
+            iterations++;
+            sigma = H[m-1][m-1];
+
+            double complex **sigmaI = Matscale(identity(dim), dim, dim, sigma);
+            double complex **H_shifted = Matsub(H, sigmaI, dim, dim);
+
+            double complex **Q_T = identity(dim);
+
+            for (int p = 1; p < m; p++) {
+                double complex xi = H_shifted[p-1][p-1];
+                double complex xj = H_shifted[p][p-1];
+
+                if (cabs(xj) < tolerance) {
+                    continue;
+                }
+
+     double complex c = conj(xi)/(csqrt(cabs(xi)*cabs(xi)+cabs(xj)*cabs(xj)));
+     double complex s = conj(xj)/(csqrt(cabs(xi)*cabs(xi)+cabs(xj)*cabs(xj)));
+
+                double complex **Gi = identity(dim);
+                Gi[p-1][p-1] = c;
+                Gi[p-1][p] = s;
+                Gi[p][p-1] = -conj(s);
+                Gi[p][p] = conj(c);
+
+                H_shifted = Matmul(Gi, H_shifted, dim, dim, dim);
+                Q_T = Matmul(Q_T, transposeMat(Gi, dim, dim), dim, dim, dim);
+
+                freeMat(Gi, dim);
+            }
+
+            H = Matmul(H_shifted, Q_T, dim, dim, dim);
+            H = Matadd(H, sigmaI, dim, dim);
+
+            freeMat(sigmaI, dim);
+            freeMat(H_shifted, dim);
+            freeMat(Q_T, dim);
+
+                if (cabs(H[m-1][m-2]) > tolerance) {
+                    continue;
+                }
+                else{
+                	break;
+                }
+        }
+    }
+
+    calcuppereig(H,dim);
+}
+
+int main(){
+    int n;
+    scanf("%d", &n);
+    double complex** matrix = createMat(n, n);
+
+    for(int i = 0; i < n; i++){
+        for(int j = 0; j < n; j++){
+            double a, b;
+            scanf("%lf %lf", &a, &b);
+            matrix[i][j] = CMPLX(a, b);
+        }
+    }
+    eigenvalues(matrix, n);
+}
+\end{verbatim}
+\section{Conclusion}
+The reason for choosing the QR decomposition algorithm with Rayleigh shift mainly because of its time complexity $O\brak{n^3}$. It offers high numerical stability which is suitable for highly dense matrices. It also makes sure that it takes advantage of properties of the input matrix such as symmetry. It is also efficient for calculating eigenvalues of all types of matrices including complex matrices. It also handles ill-conditioned matrics much better than simple algorithms.
+The implementation in C can be found at \href{https://github.com/AbhimanyuKoushik/EE1030/tree/main/Eigen}{https://github.com/AbhimanyuKoushik/EE1030/tree/main/Eigen}.
+\section*{References}
+\begin{enumerate}
+    \item W. H. Press et al., \textit{Numerical Recipes in C: The Art of Scientific Computing}.
+    \item P. Arbenz, \textit{Lecture Notes on Numerical Linear Algebra}. 
+        \href{https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf}{Link}.
+    \item Wikipedia - \textit{Eigenvalues Algorithm}
+        \href{https://en.wikipedia.org/wiki/Eigenvalue_algorithm}{Link}.
+\end{enumerate}
+
+\end{document}
