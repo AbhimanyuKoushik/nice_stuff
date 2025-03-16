@@ -83,8 +83,8 @@ R = 10
 L = 1e1
 t_max = 10
 stepsize = 5e-4
-alpha = 0.5
-T = 10.0
+alpha = 0.1
+T = 1.0
 Amplitude = 10
 
 # Define Python function f(x, y)
@@ -99,7 +99,11 @@ def numerical_derivative(y, stepsize):
     dy = np.append(dy, dy[-1])  # Repeat the last derivative value to match length
     x = np.linspace(t_init, t_max, len(dy))  # Ensure x matches y length
     return np.array(x), np.array(dy)
-    
+
+t_values = np.arange(t_init, t_max, stepsize)
+y_squarewave = squarewave(t_values, Amplitude, T, alpha)
+t_values, y_diff = numerical_derivative(y_squarewave, stepsize)
+'''
 # Create ODE solver1 instance
 solver1 = linear_de.LinearDE(f, t_init, y0, t_max, stepsize)
 solver2 = linear_de.LinearDE(g, t_init, y0, t_max, stepsize)
@@ -116,17 +120,18 @@ y_trap = np.array(solver1.Trapezoidal())
 t_values, y_derrk4 = numerical_derivative(y_rk4, stepsize)
 
 # Plot results
-'''
+
 plt.plot(t_values, y_eulerfwd, label="Forward Euler", linestyle="dashed", color="blue")
 plt.plot(t_values, y_eulerbkd, label="Backward Euler", linestyle="dashed", color="green")
 plt.plot(t_values, y_rk4, label="RK4 Method", linestyle="dashed", color="red")
 plt.plot(t_values, y_rk2, label="RK2 Method", linestyle = "dashed", color = "black")
 plt.plot(t_values, y_trap, label="Trapezoidal", linestyle = "dashed", color = "purple")
-'''
+
 plt.plot(t_values, y_rk4derr, label="Diff then RK4 Method", linestyle="dashed", color="red")
 plt.plot(t_values, L * y_derrk4, label="RK4 Method then Diff", linestyle="dashed", color="black")
 #plt.plot(t_values, g(t_values,0))
-
+'''
+plt.plot(t_values, y_diff)
 plt.xlabel("x")
 plt.ylabel("y")
 plt.title("Solution using Euler's Method and RK4")

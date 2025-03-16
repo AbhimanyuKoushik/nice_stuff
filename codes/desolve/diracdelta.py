@@ -75,9 +75,9 @@ def diff_squarewave2(t, Amplitude, timePeriod, dutyratio, stepsize):
                     np.where(np.fabs(t % timePeriod - dutyratio) <= stepsize/2, -delta_height, 0))
 
 # Define parameters
-t_init = 0
-t_max = 3
-stepsize = 1e-3
+t_init = -1
+t_max = 10
+stepsize = 5e-4
 T = 1.0        # Period of the square wave
 Amplitude = 10
 dutyratio = 0.1  # 40% duty cycle

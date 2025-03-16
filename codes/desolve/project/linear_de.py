@@ -19,13 +19,13 @@ def diff_squarewave(t, Amplitude, timePeriod, dutyratio, stepsize):
     return np.where(np.abs(np.mod(t, timePeriod)) <= stepsize, delta_height, 
                     np.where(np.abs(np.mod(t, timePeriod) - dutyratio) <= stepsize / 2, -delta_height, 0))
 
-t_init = 0
+t_init = -1
 y0 = 0
 R = 10
 L = 1e1
 t_max = 5
 stepsize = 1e-3
-alpha = 0.5
+alpha = 0.1
 T = 1.0
 Amplitude = 10
 

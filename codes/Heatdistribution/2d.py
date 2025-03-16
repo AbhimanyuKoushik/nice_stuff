@@ -9,8 +9,8 @@ maxtime = 0.5  # Time till which simulation will run
 lengthNodesx = 100 # The plate is divided into 150 strips along Y-axis, we discretized the system
 lengthNodesy = 100 # The plate is divided into 150 strips along X-axis, we discretized the system
 # Now the plate has been divided into lengthNodesx * lengthNodesy elements
-alphax = 10 # Thermal diffusivity along X-axis
-alphay = 10 # Thermal diffusivity along Y-axis
+alphax = 1 # Thermal diffusivity along X-axis
+alphay = 1 # Thermal diffusivity along Y-axis
 dx = plateLengthx / lengthNodesx # Lenght of the strip divided along X-axis
 dy = plateLengthy / lengthNodesy # Lenght of the strip divided along X-axis
 # The area of a single areal element i s dx*dy
@@ -18,7 +18,8 @@ dt = 0.25 * min(dx, dy)**2 / ((alphax**2 + alphay**2) ** (0.5))  # Stability con
 timeNodes = int(maxtime / dt)
 
 def f(x, y):
-    return 100 * np.cos(np.pi * x) * np.cos(np.pi * y)
+    #return 100 * np.cos(np.pi * x) * np.cos(np.pi * y)
+    return np.where(np.mod(x * y, 2 * np.pi) <= np.pi, 100, -100)
 
 # Grid Setup
 x = np.linspace(0, plateLengthx, lengthNodesx)
