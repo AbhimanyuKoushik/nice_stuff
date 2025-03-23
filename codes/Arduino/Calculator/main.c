@@ -104,15 +104,17 @@
 #define LCD_FUNCTION_4BIT_2LINE 0x28
 #define LCD_SET_CURSOR 0x80
 
-// Keypad layout (4x4 matrix standard layout)
+// Keypad layout (5x5 matrix)
 char keypad[5][5] = {
     {'S', 'A', 'C', 'B', '='},
     {'1', '2', '3', '4', '5'},
-    {'6', '7', '8', '9', '10'},
+    {'6', '7', '8', '9', '0'},
     {'+', '-', '*', '/', '^'},
     {'s', 'c', 't', 'p', 'e'}
 };
 
+void handle_shift_mode(char *key);
+void handle_alpha_mode(char *key);
 void lcd_init(void);
 void lcd_command(unsigned char cmd);
 void lcd_char(unsigned char data);
@@ -123,13 +125,15 @@ char keypad_scan(void);
 void evaluate_expression(char *expression);
 float perform_operation(float a, float b, char op);
 float parse_number(char **expr);
+float perform_exponentiation(float a, float b);
+float perform_operation_extended(float a, float b, char op);
+float calculate_sin_degrees(float angle_in_degrees);
+float calculate_cos_degrees(float angle_in_degrees);
+float calculate_tan_degrees(float angle_in_degrees);
+void display_trig_result(char *func_name, float angle, float result);
+void extended_handle_special_functions(char *key, char *expression, int *expr_index);
 
 #define MAX_EXPRESSION_LENGTH 50
-
-// Add these new function declarations
-void handle_shift_mode(char *key);
-void handle_alpha_mode(char *key);
-void handle_special_functions(char *key, char *expression, int *expr_index);
 
 // Add these new global variables
 int shift_mode = 0;
@@ -196,7 +200,7 @@ int main(void) {
                 lcd_string("Enter expression:");
                 lcd_command(LCD_SET_CURSOR | 0x40);
             } else if (expr_index < MAX_EXPRESSION_LENGTH - 1) {
-                handle_special_functions(&key, expression, &expr_index);
+                extended_handle_special_functions(&key, expression, &expr_index);
                 if (shift_mode) {
                     handle_shift_mode(&key);
                 } else if (alpha_mode) {
@@ -214,33 +218,77 @@ int main(void) {
 
 void handle_shift_mode(char *key) {
     // Implement shift mode functionality here
-    // For example, you could change '+' to '-', '*' to '/', etc.
     shift_mode = 1;
 }
 
 void handle_alpha_mode(char *key) {
     // Implement alpha mode functionality here
-    // For example, you could map numbers to letters
     alpha_mode = 1;
 }
 
-void handle_special_functions(char *key, char *expression, int *expr_index) {
-    char buffer[10];
-    if (*key == 's') {
-        strcpy(buffer, "sin(");
-        strcat(expression, buffer);
-        *expr_index += strlen(buffer) - 1;
-        lcd_string(buffer);
-    } else if (*key == 'c') {
-        strcpy(buffer, "cos(");
-        strcat(expression, buffer);
-        *expr_index += strlen(buffer) - 1;
-        lcd_string(buffer);
-    } else if (*key == 't') {
-        strcpy(buffer, "tan(");
-        strcat(expression, buffer);
-        *expr_index += strlen(buffer) - 1;
-        lcd_string(buffer);
+float perform_exponentiation(float a, float b) {
+    return pow(a, b);
+}
+
+float perform_operation_extended(float a, float b, char op) {
+    if (op == '^') {
+        return perform_exponentiation(a, b);
+    } else {
+        return perform_operation(a, b, op);
+    }
+}
+
+float calculate_sin_degrees(float angle_in_degrees) {
+    return sin(angle_in_degrees * M_PI / 180.0);
+}
+
+float calculate_cos_degrees(float angle_in_degrees) {
+    return cos(angle_in_degrees * M_PI / 180.0);
+}
+
+float calculate_tan_degrees(float angle_in_degrees) {
+    return tan(angle_in_degrees * M_PI / 180.0);
+}
+
+void display_trig_result(char *func_name, float angle, float result) {
+    char display_str[32];
+    char angle_str[8];
+    char result_str[16];
+    
+    dtostrf(angle, 4, 1, angle_str);
+    dtostrf(result, 8, 4, result_str);
+    
+    lcd_clear();
+    lcd_string(func_name);
+    lcd_string("(");
+    lcd_string(angle_str);
+    lcd_string(")");
+    lcd_command(LCD_SET_CURSOR | 0x40);
+    lcd_string(result_str);
+    _delay_ms(2000);
+}
+
+void extended_handle_special_functions(char *key, char *expression, int *expr_index) {
+    if (*key == 's' || *key == 'c' || *key == 't') {
+        char buffer[16];
+        float angle, result;
+        
+        if (*key == 's') {
+            strcpy(buffer, "sin(");
+            strcat(expression, buffer);
+            *expr_index += strlen(buffer) - 1;
+            lcd_string(buffer);
+        } else if (*key == 'c') {
+            strcpy(buffer, "cos(");
+            strcat(expression, buffer);
+            *expr_index += strlen(buffer) - 1;
+            lcd_string(buffer);
+        } else if (*key == 't') {
+            strcpy(buffer, "tan(");
+            strcat(expression, buffer);
+            *expr_index += strlen(buffer) - 1;
+            lcd_string(buffer);
+        }
     } else if (*key == 'p') {
         *key = '3';
         strcat(expression, ".14159");
@@ -254,9 +302,7 @@ void handle_special_functions(char *key, char *expression, int *expr_index) {
     }
 }
 
-// Modify the evaluate_expression function to handle sin, cos, and tan
 void evaluate_expression(char *expression) {
-    // Implementation of BODMAS rule with added trigonometric functions
     char *expr = expression;
     float result = parse_number(&expr);
 
@@ -265,21 +311,24 @@ void evaluate_expression(char *expression) {
         if (op == 's' && strncmp(expr, "in(", 3) == 0) {
             expr += 3;
             float angle = parse_number(&expr);
-            result = sin(angle * M_PI / 180.0);  // Convert to radians
+            result = calculate_sin_degrees(angle);
+            display_trig_result("sin", angle, result);
             expr++;  // Skip closing parenthesis
         } else if (op == 'c' && strncmp(expr, "os(", 3) == 0) {
             expr += 3;
             float angle = parse_number(&expr);
-            result = cos(angle * M_PI / 180.0);  // Convert to radians
+            result = calculate_cos_degrees(angle);
+            display_trig_result("cos", angle, result);
             expr++;  // Skip closing parenthesis
         } else if (op == 't' && strncmp(expr, "an(", 3) == 0) {
             expr += 3;
             float angle = parse_number(&expr);
-            result = tan(angle * M_PI / 180.0);  // Convert to radians
+            result = calculate_tan_degrees(angle);
+            display_trig_result("tan", angle, result);
             expr++;  // Skip closing parenthesis
         } else {
             float num = parse_number(&expr);
-            result = perform_operation(result, num, op);
+            result = perform_operation_extended(result, num, op);
         }
     }
 
@@ -294,6 +343,7 @@ float perform_operation(float a, float b, char op) {
         case '-': return a - b;
         case '*': return a * b;
         case '/': return a / b;
+        case '^': return perform_exponentiation(a, b);
         default: return 0;
     }
 }
