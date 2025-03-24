@@ -284,10 +284,10 @@ else if (mode == 6)
 #define LCD_SET_CURSOR 0x80
 
 const char keypad_normal[4][5] PROGMEM = {
-    {'7', '8', '9', '+', 'D'},
-    {'4', '5', '6', '-', 'S'},
-    {'1', '2', '3', '*', 'A'},
-    {'0', '.', '=', '/', 'C'}
+    {'S', 'A', 'C', 'D', '='},
+    {'1', '2', '3', '4', '5'},
+    {'6', '7', '8', '9', '0'},
+    {'+', '-', '*', '/', '.'}
 };
 
 const char* const keypad_alpha[4][5] PROGMEM  = {

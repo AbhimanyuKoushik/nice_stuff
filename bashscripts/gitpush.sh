@@ -7,8 +7,6 @@
 #-> git remote set-url origin https://[token]@github.com/<username>/<reponame>
 # They change git push such that you dont need to give username or password each time you give the command git push
 
-#!/bin/bash
-
 # only # is commenting, # with exclamation specifies the interpreter to the OS, in this case /bin/bash, to run the script. If we dont specify the interpreter the OS usually runs in /bin/bash if the command is bash filename.sh, if we run via ./filename.sh then it will run in the default shell which might be different from /bin/bash
 
 # we can run a bash script using filename only when the directory it is in is present is $PATH so that it is accessible from anywhere, if it is not in $PATH the you need to run it using ./filename.sh (./ means specifying current directory)

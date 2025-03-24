@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.31)  24 MAR 2025 22:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.31)  24 MAR 2025 23:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -353,7 +353,7 @@ Package hyperref Info: Link coloring OFF on input line 12.
 [1
 
 {/opt/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-<figs/circuit.jpg, id=42, 930.47626pt x 912.40875pt>
+<figs/circuit.jpg, id=46, 930.47626pt x 912.40875pt>
 File: figs/circuit.jpg Graphic file (type jpg)
 <use figs/circuit.jpg>
 Package pdftex.def Info: figs/circuit.jpg  used on input line 35.
@@ -386,13 +386,13 @@ LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: FBED6ED24FD06CF5D48920FDDECE3377;1013.
+(rerunfilecheck)             Checksum: 4C410C02B26399E55A479B3A4591DC9F;1210.
  ) 
 Here is how much of TeX's memory you used:
- 10633 strings out of 473201
- 161288 string characters out of 5685387
+ 10635 strings out of 473201
+ 161308 string characters out of 5685387
  569476 words of memory out of 5000000
- 33737 multiletter control sequences out of 15000+600000
+ 33738 multiletter control sequences out of 15000+600000
  565467 words of font info for 59 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,8n,79p,460b,528s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -404,10 +404,10 @@ t/fonts/type1/public/amsfonts/cm/cmr17.pfb></opt/texlive/2024/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmr8.pfb></opt/texlive/2024/texmf-dist/fonts/type1/pub
 lic/amsfonts/cm/cmsy10.pfb></opt/texlive/2024/texmf-dist/fonts/type1/public/cm-
 super/sfrm1200.pfb>
-Output written on report.pdf (7 pages, 579675 bytes).
+Output written on report.pdf (7 pages, 580346 bytes).
 PDF statistics:
- 152 PDF objects out of 1000 (max. 8388607)
- 124 compressed objects within 2 object streams
- 46 named destinations out of 1000 (max. 500000)
- 62 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 157 PDF objects out of 1000 (max. 8388607)
+ 129 compressed objects within 2 object streams
+ 47 named destinations out of 1000 (max. 500000)
+ 70 words of extra memory for PDF output out of 10000 (max. 10000000)
 
