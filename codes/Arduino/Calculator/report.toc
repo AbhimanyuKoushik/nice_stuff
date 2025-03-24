@@ -1,0 +1,7 @@
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
+\contentsline {section}{\numberline {2}Circuit Description}{2}{section.2}%
+\contentsline {section}{\numberline {3}Working Principle}{2}{section.3}%
+\contentsline {section}{\numberline {4}Code Analysis}{2}{section.4}%
+\contentsline {section}{\numberline {5}Technical Details}{4}{section.5}%
+\contentsline {section}{\numberline {6}Error Handling}{4}{section.6}%
+\contentsline {section}{\numberline {7}Modes of Operation}{4}{section.7}%

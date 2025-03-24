@@ -9,7 +9,7 @@ F_CPU=16000000
 FORMAT = ihex
 TARGET = main
 SRC = $(TARGET).c
-ASRC = funcs.c parser.c
+ASRC = 
 OPT = s
 
 # Name of this Makefile (used for "make depend").
@@ -24,7 +24,7 @@ CSTANDARD = -std=gnu99
 #CSTANDARD = -std=gnu11
 
 # Place -D or -U options here
-CDEFS = 
+CDEFS =
 
 # Place -I options here
 CINCS =
@@ -33,7 +33,7 @@ CINCS =
 CDEBUG = -g
 CWARN = -Wall -Wstrict-prototypes
 CTUNING = -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
-CFLAGS = $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) -O2 $(CWARN) $(CSTANDARD) $(CEXTRA)  -Wl,-u,vfscanf -lscanf_flt -Wl,-u,vfprintf -lprintf_flt
+CFLAGS = $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) -O2 $(CWARN) $(CSTANDARD) $(CEXTRA) 
 CPPFLAGS=-DF_CPU=$(F_CPU)L
 ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs 
 
@@ -164,19 +164,3 @@ depend:
 	$(CC) -M -mmcu=$(MCU) $(CDEFS) $(CINCS) $(SRC) $(ASRC) >> $(MAKEFILE)
 
 .PHONY:	all build elf hex eep lss sym program coff extcoff clean depend 
-# DO NOT DELETE THIS LINE -- make depend depends on it.
-main.o: main.c /usr/avr/include/avr/io.h /usr/avr/include/avr/sfr_defs.h \
- /usr/avr/include/inttypes.h /usr/lib/gcc/avr/14.2.0/include/stdint.h \
- /usr/avr/include/stdint.h /usr/avr/include/avr/iom328p.h \
- /usr/avr/include/avr/portpins.h /usr/avr/include/avr/common.h \
- /usr/avr/include/avr/version.h /usr/avr/include/avr/fuse.h \
- /usr/avr/include/avr/lock.h /usr/avr/include/util/delay.h \
- /usr/avr/include/util/delay_basic.h parser.h /usr/avr/include/stdlib.h \
- /usr/lib/gcc/avr/14.2.0/include/stddef.h /usr/avr/include/string.h \
- /usr/avr/include/stdio.h /usr/lib/gcc/avr/14.2.0/include/stdarg.h
-parser.o: parser.c /usr/avr/include/stdio.h /usr/avr/include/inttypes.h \
- /usr/lib/gcc/avr/14.2.0/include/stdint.h /usr/avr/include/stdint.h \
- /usr/lib/gcc/avr/14.2.0/include/stdarg.h \
- /usr/lib/gcc/avr/14.2.0/include/stddef.h /usr/avr/include/stdlib.h \
- /usr/avr/include/string.h funcs.h
-funcs.o: funcs.c
