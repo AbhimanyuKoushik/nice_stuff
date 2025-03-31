@@ -13,25 +13,15 @@ data = [
 ]
 '''
 
-# Use this data for 1D clustering
-data = [82, 68, 68, 44.8, 72, 54, 48, 28.4, 29.2, 37.6, 18.4, 65.6, 29.2, -25.2, 47.2, 36, 16, 42, 46.8, 23.6, 53.2, 21.2, 49.6, 58, 19.2, 46.4, 36, 26.4, 33.6, 45.6, 13.6, 42.8, 37.2, 30.4, 38, 35.6, 43.2, 33.2, 31.6, 43.6, 46, 56.4, 24, 38.8, -32, -32, 47.6, 53.2, 52.8, 41.6, 39.6, 42.4, 77.6, 43.6, 38.4, 39.2, -28, 39.2, 78, 35.2, 48, 60, 38, 34.4, 45.2, 40]
-
 # Generate random data
-#num_points = 200
-#dimensions = 3  # Randomly choose 1D, 2D, or 3D data
-#data = np.random.rand(num_points, dimensions) * (num_points / 15)  # Random values between 0 and 10
-#data = data.tolist()
-
-num_points = len(data)
-dimensions = 1  # Set dimension to 1 (for this data); change to 2 or 3 as needed
-
-# If dimensions is 1, convert flat list to list of one-element lists
-if dimensions == 1:
-    data = [[d] for d in data]
+num_points = 500
+dimensions = 3  # Set dimension to 3 (can be 1, 2, or 3)
+data = np.random.rand(num_points, dimensions) * (num_points / 15)
+data = data.tolist()
 
 # Run K-means from C++ module
-k = 8
-iterations = num_points * num_points * num_points
+k = 15
+iterations = int(np.floor(( num_points ** 2.5 ) / 2))
 clusters = kmeans.kmeans(dimensions, data, k, iterations)
 
 # Hardcoded CSS3 colors dictionary (hex -> color name)
@@ -202,7 +192,7 @@ def plot_1d(clusters):
     plt.xlabel('X')
     plt.ylabel('Cluster')
     plt.title('K-means Clustering in 1D using Pybind11')
-    plt.legend(loc='upper right')
+    plt.legend()
     plt.grid(True)
     plt.show()
 
@@ -217,7 +207,7 @@ def plot_2d(clusters):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.title('K-means Clustering in 2D using Pybind11')
-    plt.legend(loc='upper right')
+    plt.legend()
     plt.grid(True)
     plt.show()
 
@@ -234,7 +224,7 @@ def plot_3d(clusters):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.set_title('K-means Clustering in 3D using Pybind11')
-    ax.legend(loc='upper right')
+    ax.legend()
     plt.show()
 
 def check_cluster(point):
@@ -259,8 +249,8 @@ def check_cluster(point):
         print(f"The point {point} does not belong to any cluster.")
 
 # Example: Check which cluster a point belongs to
-example_point = [58] if dimensions == 1 else ([3.5, 2.0] if dimensions == 2 else [3.5, 2.0, 1.5])
-check_cluster(example_point)
+# example_point = [3.5, 2.0, 1.5]  # Adjust dimension as needed
+# check_cluster(example_point)
 
 # Plot the clusters based on dimension
 if dimensions == 1:

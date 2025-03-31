@@ -12,7 +12,13 @@
 # we can run a bash script using filename only when the directory it is in is present is $PATH so that it is accessible from anywhere, if it is not in $PATH the you need to run it using ./filename.sh (./ means specifying current directory)
 
 # Default commit message if none is provided
-commit_message=${1:-"commit"}
+# If no arguments are provided, use the default message; otherwise, join all arguments.
+if [ "$#" -eq 0 ]; then
+  commit_message="commit"
+else
+  commit_message="$*"
+fi
+# That is the entire line is take as the commit message
 
 # Add all changes
 git add .
