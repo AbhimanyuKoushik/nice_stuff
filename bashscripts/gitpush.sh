@@ -38,6 +38,7 @@ echo "Changes pushed successfully!"
 # To keep a folder location /.local/bin in path use export PATH=$PATH:/home/abhimanyukoushik07/.local/bin (or what ever the folder location is)
 # -->mv gitpush.sh ~/.local/bin/gitpush
 # -->chmod +x ~/.local/bin/gitpush
+# Always save the name as gitpush, not gitpush.sh
 # Rule of thumb, don't mess around with /usr/local/bin
 # Now the file should be executable from anywhere
 # To delete the following bash script run rm ~/.local/bin/gitpush
