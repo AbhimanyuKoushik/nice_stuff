@@ -34,6 +34,7 @@ inline U64 queen_attacks(int sq, U64 occ) {
     return rook_attacks(sq, occ) | bishop_attacks(sq, occ);
 }
 
+// Returns true is any piece from Side attackes square sq on Board board
 inline bool isSquareAttacked(int sq, const Board& board, int Side) {
     // Checking using if a piece exists on the attacking square, check if same piece exists on the square it attacks
     // if there then the square is attacked
@@ -46,6 +47,34 @@ inline bool isSquareAttacked(int sq, const Board& board, int Side) {
     if (queen_attacks(sq, board.occupancies[2]) & ((Side == White) ? board.bitboards[wQ] : board.bitboards[bQ])) return true;
     
     return false;
+}
+
+void print_attacked_squares(const Board& board, int Side){
+    printf("\n");
+    
+    // loop over board ranks
+    for (int rank = 0; rank < 8; rank++)
+    {
+        // loop over board files
+        for (int file = 0; file < 8; file++)
+        {
+            // init square
+            int square = rank * 8 + file;
+            
+            // print ranks
+            if (!file)
+                printf("  %d ", 8 - rank);
+            
+            // check whether current square is attacked or not
+            printf(" %d", isSquareAttacked(square, board, Side) ? 1 : 0);
+        }
+        
+        // print new line every rank
+        printf("\n");
+    }
+    
+    // print files
+    printf("\n     a b c d e f g h\n\n");
 }
 
 #endif // ATTACKS_HPP
