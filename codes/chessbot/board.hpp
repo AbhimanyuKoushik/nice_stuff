@@ -6,6 +6,7 @@
 #include <sstream>
 #include "types.hpp"
 #include "bitboard.hpp"
+#include "nonmagic.hpp"
 
 struct Board {
     uint8_t arrangement[64];
@@ -181,7 +182,6 @@ struct Board {
                                                                 << square_to_coordinates[target_square] << "b\n";
                                 std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
                                                                 << square_to_coordinates[target_square] << "n\n";
-
                             }
 
                             else{
@@ -195,6 +195,41 @@ struct Board {
                                 }
                             }
                         }
+                        // Captures
+                        attacks = PawnAttacks[SideToMove][source_square] & occupancies[Black];
+
+                        while(attacks){
+                            target_square = get_ls1b_index(attacks);
+
+                            if(source_square >= a7 && source_square <= h7){
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "q\n";
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "r\n";
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "b\n";
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "n\n";
+                            }
+                            else std::cout << "Pawn Capture: " << square_to_coordinates[source_square]
+                                                           << square_to_coordinates[target_square] <<std::endl;
+
+                            pop_bit(attacks, target_square);
+                        }
+
+                        if(enpassant != no_sq){
+                            // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                            U64 enpassant_attacks = PawnAttacks[SideToMove][source_square] & (1ULL << enpassant);
+
+                            // Make sure enpassant capture is available
+                            if(enpassant_attacks){
+                                int target_enpassant = get_ls1b_index(enpassant_attacks);
+
+                                std::cout << "Pawn Enpassant Capture: " << square_to_coordinates[source_square]
+                                                           << square_to_coordinates[target_enpassant] <<std::endl;
+                            }
+                        }
+
                         pop_bit(bitboard, source_square);
                     }
                 }
@@ -218,7 +253,6 @@ struct Board {
                                                                 << square_to_coordinates[target_square] << "b\n";
                                 std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
                                                                 << square_to_coordinates[target_square] << "n\n";
-
                             }
 
                             else{
@@ -232,6 +266,41 @@ struct Board {
                                 }
                             }
                         }
+                        // Captures
+                        attacks = PawnAttacks[SideToMove][source_square] & occupancies[White];
+
+                        while(attacks){
+                            target_square = get_ls1b_index(attacks);
+
+                            if(source_square >= a2 && source_square <= h2){
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "q\n";
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "r\n";
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "b\n";
+                                std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                                << square_to_coordinates[target_square] << "n\n";
+                            }
+                            else std::cout << "Pawn Capture: " << square_to_coordinates[source_square]
+                                                           << square_to_coordinates[target_square] <<std::endl;
+
+                            pop_bit(attacks, target_square);
+                        }
+
+                        if(enpassant != no_sq){
+                            // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                            U64 enpassant_attacks = PawnAttacks[SideToMove][source_square] & (1ULL << enpassant);
+
+                            // Make sure enpassant capture is available
+                            if(enpassant_attacks){
+                                int target_enpassant = get_ls1b_index(enpassant_attacks);
+
+                                std::cout << "Pawn Enpassant Capture: " << square_to_coordinates[source_square]
+                                                           << square_to_coordinates[target_enpassant] <<std::endl;
+                            }
+                        }
+
                         pop_bit(bitboard, source_square);
                     }
                 }
