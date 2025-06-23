@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <cstdint>
 #include "types.hpp"
 #include "bitboard.hpp"
 
@@ -11,11 +12,11 @@
 
 using Attacks = std::vector<U64>;
 using AttackArray = std::array<Attacks,64>;
-AttackArray RookAttacks;
-AttackArray BishopAttacks;
+extern AttackArray RookAttacks;
+extern AttackArray BishopAttacks;
 
 // Compute occupancy mask for rook on square `sq`
-U64 rook_mask(int sq) {
+inline U64 rook_mask(int sq) {
     U64 mask = 0ULL;
     int r = sq/8, f = sq%8;
     for (int ff = f+1; ff <= 6; ++ff) mask |= (1ULL << (r*8 + ff));
@@ -24,7 +25,8 @@ U64 rook_mask(int sq) {
     for (int rr = r-1; rr >= 1; --rr) mask |= (1ULL << (rr*8 + f));
     return mask;
 }
-U64 bishop_mask(int sq) {
+
+inline U64 bishop_mask(int sq) {
     U64 mask = 0ULL;
     int r = sq/8, f = sq%8;
     for (int d = 1; f+d <= 6 && r+d <= 6; ++d) mask |= (1ULL << ((r+d)*8 + (f+d)));
@@ -35,7 +37,7 @@ U64 bishop_mask(int sq) {
 }
 
 // Generates sliding attacks (naive) used in precompute
-U64 sliding_attacks_rook(int square, U64 block) {
+inline U64 sliding_attacks_rook(int square, U64 block) {
     U64 blockers = block & rook_mask(square);
 
      // result attacks bitboard
@@ -79,7 +81,7 @@ U64 sliding_attacks_rook(int square, U64 block) {
 
 // Naive slidingâ€bishop, but only looks at the diagonal blockers.
 // `block` is the full occupancy; we mask it first.
-U64 sliding_attacks_bishop(int square, U64 block) {
+inline U64 sliding_attacks_bishop(int square, U64 block) {
     // Only keep the diagonal blockers
     U64 blockers = block & bishop_mask(square);
 
@@ -116,7 +118,7 @@ U64 sliding_attacks_bishop(int square, U64 block) {
 }
 
 // Precompute magic tables with debug printing
-void init_sliders() {
+inline void init_sliders() {
     std::cout << "Initializing magic sliders...\n";
     for (int sq = 0; sq < 64; ++sq) {
         U64 mask = rook_mask(sq);

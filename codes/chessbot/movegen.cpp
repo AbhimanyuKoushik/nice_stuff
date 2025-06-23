@@ -1,0 +1,200 @@
+#include "movegen.hpp"
+#include "board.hpp"
+#include "bitboard.hpp"
+#include "magic.hpp"
+#include "nonmagic.hpp"
+#include "attacks.hpp"
+#include <iostream>
+
+void generate_pawn_moves(int Side, const Board& board){
+
+    int source_square, target_square;
+    U64 bitboard, attacks;
+
+    if(Side == White){
+        bitboard = board.bitboards[wP];
+        while(bitboard){
+            source_square = get_ls1b_index(bitboard);
+            target_square = source_square - 8; //Pawn moves only 1 step front given no capture
+
+            // The target_square should be empty and it should exist
+            if(!(target_square < a8) && !get_bit(board.occupancies[Both], target_square)){
+                // Pawn promotion
+                if(source_square >= a7 && source_square <= h7){
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "q\n";
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "r\n";
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "b\n";
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "n\n";
+                }
+
+                else{
+                    std::cout << "Pawn push: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_square] <<std::endl;
+
+                    // Double push initially
+                    if((source_square >= a2) && (source_square <= h2) && !get_bit(board.occupancies[Both], target_square - 8)){
+                        std::cout << "Double Pawn push: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_square - 8] <<std::endl;
+                    }
+                }
+            }
+            // Captures
+            attacks = PawnAttacks[White][source_square] & board.occupancies[Black];
+
+            while(attacks){
+                target_square = get_ls1b_index(attacks);
+
+                if(source_square >= a7 && source_square <= h7){
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "q\n";
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "r\n";
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "b\n";
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "n\n";
+                }
+                else std::cout << "Pawn Capture: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_square] <<std::endl;
+
+                pop_bit(attacks, target_square);
+            }
+
+            if(board.enpassant != no_sq){
+                // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                U64 enpassant_attacks = PawnAttacks[White][source_square] & (1ULL << board.enpassant);
+
+                // Make sure enpassant capture is available
+                if(enpassant_attacks){
+                    int target_enpassant = get_ls1b_index(enpassant_attacks);
+
+                    std::cout << "Pawn Enpassant Capture: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_enpassant] <<std::endl;
+                }
+            }
+
+            pop_bit(bitboard, source_square);
+        }
+    }
+
+    else{
+        bitboard = board.bitboards[bP];
+        while(bitboard){
+            source_square = get_ls1b_index(bitboard);
+            target_square = source_square + 8; //Pawn moves only 1 step front given no capture
+
+            // The target_square should be empty and it should exist
+            if(!(target_square > h1) && !get_bit(board.occupancies[Both], target_square)){
+                // Pawn promotion
+                if(source_square >= a2 && source_square <= h2){
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "q\n";
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "r\n";
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "b\n";
+                    std::cout << "Pawn promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "n\n";
+                }
+
+                else{
+                    std::cout << "Pawn push: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_square] <<std::endl;
+
+                    // Double push initially
+                    if((source_square >= a7) && (source_square <= h7) && !get_bit(board.occupancies[Both], target_square + 8)){
+                        std::cout << "Double Pawn push: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_square + 8] <<std::endl;
+                    }
+                }
+            }
+            // Captures
+            attacks = PawnAttacks[Black][source_square] & board.occupancies[White];
+
+            while(attacks){
+                target_square = get_ls1b_index(attacks);
+
+                if(source_square >= a2 && source_square <= h2){
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "q\n";
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "r\n";
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "b\n";
+                    std::cout << "Pawn capture promotion: " << square_to_coordinates[source_square] 
+                                                    << square_to_coordinates[target_square] << "n\n";
+                }
+                else std::cout << "Pawn Capture: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_square] <<std::endl;
+
+                pop_bit(attacks, target_square);
+            }
+
+            if(board.enpassant != no_sq){
+                // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                U64 enpassant_attacks = PawnAttacks[Black][source_square] & (1ULL << board.enpassant);
+
+                // Make sure enpassant capture is available
+                if(enpassant_attacks){
+                    int target_enpassant = get_ls1b_index(enpassant_attacks);
+
+                    std::cout << "Pawn Enpassant Capture: " << square_to_coordinates[source_square]
+                                                << square_to_coordinates[target_enpassant] <<std::endl;
+                }
+            }
+
+            pop_bit(bitboard, source_square);
+        }
+
+    }
+}
+
+void generate_king_moves(int Side, const Board& board){
+    if(Side == White){
+        // Check castling
+
+        // Castling Kingside
+        if(board.castling & wk){
+            // Make sure the squares between king and rook are empty
+            if(!get_bit(board.occupancies[Both], f1) && !get_bit(board.occupancies[Both], g1)){
+                // Make sure the King and the squares in which the king travels are not attacked
+                if(!isSquareAttacked(e1, board, Black) && !isSquareAttacked(f1, board, Black) && !isSquareAttacked(g1, board, Black)){
+                    std::cout << "Castling Move: King side - e1g1" << std::endl;
+                }
+            }
+        }
+
+        // Castling Queenside
+        if(board.castling & wq){
+            if(!get_bit(board.occupancies[Both], b1) && !get_bit(board.occupancies[Both], c1) && !get_bit(board.occupancies[Both], d1)){
+                if(!isSquareAttacked(e1, board, Black) && !isSquareAttacked(d1, board, Black) && !isSquareAttacked(c1, board, Black)){
+                    std::cout << "Castling Move: Queen side - e1c1" << std::endl;
+                }
+            }
+        }
+    }
+    else{
+        if(board.castling & bk){
+            // Make sure the squares between king and rook are empty
+            if(!get_bit(board.occupancies[Both], f8) && !get_bit(board.occupancies[Both], g8)){
+                // Make sure the King and the squares in which the king travels are not attacked
+                if(!isSquareAttacked(e8, board, White) && !isSquareAttacked(f8, board, White) && !isSquareAttacked(g8, board, White)){
+                    std::cout << "Castling Move: King side - e8g8" << std::endl;
+                }
+            }
+        }
+
+        // Castling Queenside
+        if(board.castling & bq){
+            if(!get_bit(board.occupancies[Both], b1) && !get_bit(board.occupancies[Both], c1) && !get_bit(board.occupancies[Both], d1)){
+                if(!isSquareAttacked(e8, board, White) && !isSquareAttacked(d8, board, White) && !isSquareAttacked(c8, board, White)){
+                    std::cout << "Castling Move: Queen side - e8c8" << std::endl;
+                }
+            }
+        }
+    }
+}

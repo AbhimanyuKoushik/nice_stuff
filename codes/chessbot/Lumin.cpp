@@ -8,6 +8,7 @@
 #include "attacks.hpp"
 #include "magic.hpp"
 #include "nonmagic.hpp"
+#include "movegen.hpp"
 
 // Initialize all attack tables
 void init_all() {
@@ -20,19 +21,14 @@ int main() {
     init_all();
 
     // 2. Test position: standard Kiwipete FEN
-    std::string fen = "r3k2r/ppppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+    std::string fen = "r3k2r/ppppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1";
     Board board = parsefen(fen);
 
     // 3. Print board arrangement
     std::cout << "Parsed Board:\n";
     board.print();
 
-    // 4. Show occupancy bitboard
-    U64 occ = board.occupancies[Both];
-
     board.generate_moves();
-
-
 
     return 0;
 }

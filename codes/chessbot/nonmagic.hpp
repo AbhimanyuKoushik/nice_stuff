@@ -8,11 +8,11 @@
 // Non-sliding piece attack masks and initialization
 
 // Attack tables (defined in .cpp)
-inline Bitboard PawnAttacks[2][64];
-inline Bitboard KnightAttacks[64];
-inline Bitboard KingAttacks[64];
-inline Bitboard bishop_masks[64];
-inline Bitboard rook_masks[64];
+extern Bitboard PawnAttacks[2][64];
+extern Bitboard KnightAttacks[64];
+extern Bitboard KingAttacks[64];
+extern Bitboard bishop_masks[64];
+extern Bitboard rook_masks[64];
 
 inline U64 mask_pawn_attacks(int side, int square)
 {
