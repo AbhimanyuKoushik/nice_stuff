@@ -1,10 +1,10 @@
 #ifndef ATTACKS_HPP
 #define ATTACKS_HPP
 
-#include "types.hpp"
-#include "magic.hpp"
-#include "nonmagic.hpp"
-#include "board.hpp"
+// attacks.hpp
+#pragma once
+#include "types.hpp"    // for U64/Color, if needed
+struct Board;  
 
 U64 pawn_attacks(Color side, int sq);
 U64 knight_attacks(int sq);

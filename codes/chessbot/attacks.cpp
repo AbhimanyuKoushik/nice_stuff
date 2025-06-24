@@ -1,4 +1,9 @@
+// attacks.cpp
 #include "attacks.hpp"
+#include "board.hpp"
+#include "types.hpp"
+#include "magic.hpp"
+#include "nonmagic.hpp"
 
 // Piece-specific attack generation
 U64 pawn_attacks(Color side, int sq){

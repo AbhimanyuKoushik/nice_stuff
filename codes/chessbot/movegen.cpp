@@ -1,10 +1,7 @@
+// movegen.cpp
 #include "movegen.hpp"
 #include "board.hpp"
-#include "bitboard.hpp"
-#include "magic.hpp"
-#include "nonmagic.hpp"
 #include "attacks.hpp"
-#include <iostream>
 
 void generate_pawn_moves(int Side, const Board& board){
 
@@ -154,6 +151,43 @@ void generate_pawn_moves(int Side, const Board& board){
 }
 
 void generate_king_moves(int Side, const Board& board){
+
+    int source_square, target_square;
+    U64 bitboard, attacks;
+    uint8_t piece = (Side == White) ? wK : bK;
+    bitboard = board.bitboards[piece];
+
+    // Loop over source squares of piece bitboard
+    while(bitboard){
+        source_square = get_ls1b_index(bitboard);
+
+        // Dont capture piece from your side
+        attacks = KingAttacks[source_square] & ((Side == White) ? ~board.occupancies[White] : ~board.occupancies[Black]);
+        while(attacks){
+            target_square = get_ls1b_index(attacks);
+
+            if(isSquareAttacked(target_square, board, (Side == White) ? Black : White)){
+                pop_bit(attacks, target_square);
+                continue;
+            }
+
+            // Quiet Move
+            if(!get_bit(((Side == White) ? board.occupancies[Black] : board.occupancies[White]), target_square)){
+                std::cout << "King Move: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+
+            // Capture Move
+            else{
+                std::cout << "King Capture: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+            pop_bit(attacks, target_square);
+        }
+
+        pop_bit(bitboard, source_square);
+    }
+
     if(Side == White){
         // Check castling
 
@@ -190,11 +224,143 @@ void generate_king_moves(int Side, const Board& board){
 
         // Castling Queenside
         if(board.castling & bq){
-            if(!get_bit(board.occupancies[Both], b1) && !get_bit(board.occupancies[Both], c1) && !get_bit(board.occupancies[Both], d1)){
+            if(!get_bit(board.occupancies[Both], b8) && !get_bit(board.occupancies[Both], c8) && !get_bit(board.occupancies[Both], d8)){
                 if(!isSquareAttacked(e8, board, White) && !isSquareAttacked(d8, board, White) && !isSquareAttacked(c8, board, White)){
                     std::cout << "Castling Move: Queen side - e8c8" << std::endl;
                 }
             }
         }
+    }
+}
+
+void generate_knight_moves(int Side, const Board& board){
+    int source_square, target_square;
+    U64 bitboard, attacks;
+    uint8_t piece = (Side == White) ? wN : bN;
+    bitboard = board.bitboards[piece];
+
+    // Loop over source squares of piece bitboard
+    while(bitboard){
+        source_square = get_ls1b_index(bitboard);
+
+        // Dont capture piece from your side
+        attacks = KnightAttacks[source_square] & ((Side == White) ? ~board.occupancies[White] : ~board.occupancies[Black]);
+        while(attacks){
+            target_square = get_ls1b_index(attacks);
+
+            // Quiet Move
+            if(!get_bit(((Side == White) ? board.occupancies[Black] : board.occupancies[White]), target_square)){
+                std::cout << "Knight Move: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+
+            // Capture Move
+            else{
+                std::cout << "Knight Capture: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+            pop_bit(attacks, target_square);
+        }
+
+        pop_bit(bitboard, source_square);
+    }
+}
+
+void generate_bishop_moves(int Side, const Board& board){
+    int source_square, target_square;
+    U64 bitboard, attacks;
+    uint8_t piece = (Side == White) ? wB : bB;
+    bitboard = board.bitboards[piece];
+
+    // Loop over source squares of piece bitboard
+    while(bitboard){
+        source_square = get_ls1b_index(bitboard);
+
+        // Dont capture piece from your side
+        attacks = bishop_attacks(source_square, board.occupancies[Both]) & ((Side == White) ? ~board.occupancies[White] : ~board.occupancies[Black]);
+        while(attacks){
+            target_square = get_ls1b_index(attacks);
+
+            // Quiet Move
+            if(!get_bit(((Side == White) ? board.occupancies[Black] : board.occupancies[White]), target_square)){
+                std::cout << "Bishop Move: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+
+            // Capture Move
+            else{
+                std::cout << "Bishop Capture: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+            pop_bit(attacks, target_square);
+        }
+
+        pop_bit(bitboard, source_square);
+    }
+}
+
+void generate_rook_moves(int Side, const Board& board){
+    int source_square, target_square;
+    U64 bitboard, attacks;
+    uint8_t piece = (Side == White) ? wR : bR;
+    bitboard = board.bitboards[piece];
+
+    // Loop over source squares of piece bitboard
+    while(bitboard){
+        source_square = get_ls1b_index(bitboard);
+
+        // Dont capture piece from your side
+        attacks = rook_attacks(source_square, board.occupancies[Both]) & ((Side == White) ? ~board.occupancies[White] : ~board.occupancies[Black]);
+        while(attacks){
+            target_square = get_ls1b_index(attacks);
+
+            // Quiet Move
+            if(!get_bit(((Side == White) ? board.occupancies[Black] : board.occupancies[White]), target_square)){
+                std::cout << "Rook Move: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+
+            // Capture Move
+            else{
+                std::cout << "Rook Capture: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+            pop_bit(attacks, target_square);
+        }
+
+        pop_bit(bitboard, source_square);
+    }
+}
+
+void generate_queen_moves(int Side, const Board& board){
+    int source_square, target_square;
+    U64 bitboard, attacks;
+    uint8_t piece = (Side == White) ? wQ : bQ;
+    bitboard = board.bitboards[piece];
+
+    // Loop over source squares of piece bitboard
+    while(bitboard){
+        source_square = get_ls1b_index(bitboard);
+
+        // Dont capture piece from your side
+        attacks = queen_attacks(source_square, board.occupancies[Both]) & ((Side == White) ? ~board.occupancies[White] : ~board.occupancies[Black]);
+        while(attacks){
+            target_square = get_ls1b_index(attacks);
+
+            // Quiet Move
+            if(!get_bit(((Side == White) ? board.occupancies[Black] : board.occupancies[White]), target_square)){
+                std::cout << "Queen Move: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+
+            // Capture Move
+            else{
+                std::cout << "Queen Capture: " << square_to_coordinates[source_square] << square_to_coordinates[target_square] << std::endl;
+            }
+
+            pop_bit(attacks, target_square);
+        }
+
+        pop_bit(bitboard, source_square);
     }
 }

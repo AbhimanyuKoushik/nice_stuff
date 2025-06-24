@@ -3,7 +3,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O3
 TARGET = lumin
-SOURCES = Lumin.cpp movegen.cpp magic.cpp nonmagic.cpp attacks.cpp bitboard.cpp
+SOURCES = Lumin.cpp movegen.cpp magic.cpp nonmagic.cpp attacks.cpp bitboard.cpp board.cpp
 
 # Build the program
 $(TARGET): $(SOURCES)
@@ -14,7 +14,7 @@ clean:
 	rm -f $(TARGET)
 
 # Run the program
-run: $(TARGET)
+run:$(TARGET)
 	./$(TARGET)
 
 # Rebuild everything
