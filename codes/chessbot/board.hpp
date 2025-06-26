@@ -8,6 +8,7 @@
 #include "bitboard.hpp"
 #include "nonmagic.hpp"
 #include "movegen.hpp"
+#include "movedef.hpp"
 
 struct Board {
     uint8_t arrangement[64];
@@ -20,6 +21,7 @@ struct Board {
     uint8_t enpassant = no_sq;
 
     uint8_t HalfMovesMade;
+    Moves move_list;
 
     Board() { init(); }
 

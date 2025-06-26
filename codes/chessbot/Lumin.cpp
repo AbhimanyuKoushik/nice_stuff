@@ -9,6 +9,7 @@
 #include "magic.hpp"
 #include "nonmagic.hpp"
 #include "movegen.hpp"
+#include "movedef.hpp"
 
 // Initialize all attack tables
 void init_all() {
@@ -20,15 +21,9 @@ int main() {
     // 1. Initialize attack tables
     init_all();
 
-    // 2. Test position: standard Kiwipete FEN
-    std::string fen = "r3k2r/ppppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-    Board board = parsefen(fen);
-
-    // 3. Print board arrangement
-    std::cout << "Parsed Board:\n";
-    board.print();
-
+    Board board;
     board.generate_moves();
+    board.move_list.print_move_list();
 
     return 0;
 }

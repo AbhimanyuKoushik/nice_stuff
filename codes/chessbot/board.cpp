@@ -4,6 +4,7 @@
 #include "nonmagic.hpp"
 #include "magic.hpp"
 #include "types.hpp"
+#include "movedef.hpp"
 #include <iostream>
 #include <sstream>
 
@@ -124,12 +125,12 @@ void Board::print() const {
 //–– generate_moves ––
 void Board::generate_moves() {
     // call into your free functions:
-    generate_pawn_moves(SideToMove, *this);
-    generate_knight_moves(SideToMove, *this);
-    generate_king_moves(SideToMove, *this);
-    generate_bishop_moves(SideToMove, *this);
-    generate_rook_moves(SideToMove, *this);
-    generate_queen_moves(SideToMove, *this);
+    generate_pawn_moves(SideToMove, *this, move_list);
+    generate_king_moves(SideToMove, *this, move_list);
+    generate_knight_moves(SideToMove, *this, move_list);
+    generate_bishop_moves(SideToMove, *this, move_list);
+    generate_rook_moves(SideToMove, *this, move_list);
+    generate_queen_moves(SideToMove, *this, move_list);
     // plus sliding pieces, etc.
 }
 
