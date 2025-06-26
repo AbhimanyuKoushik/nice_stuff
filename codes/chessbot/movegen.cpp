@@ -260,13 +260,13 @@ void generate_bishop_moves(int Side, const Position& position, Moves& move_list)
 
             // Quiet Move
             if(!get_bit(((Side == White) ? position.occupancies[Black] : position.occupancies[White]), target_square)){
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wB : bB, (Side == White) ? wB : bB, 0, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wB : bB), ((Side == White) ? wB : bB), 0, 0, 0, 0));
             }
 
 
             // Capture Move
             else{
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wB : bB, (Side == White) ? wB : bB, 1, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wB : bB), ((Side == White) ? wB : bB), 1, 0, 0, 0));
             }
 
             pop_bit(attacks, target_square);
@@ -293,13 +293,13 @@ void generate_rook_moves(int Side, const Position& position, Moves& move_list){
 
             // Quiet Move
             if(!get_bit(((Side == White) ? position.occupancies[Black] : position.occupancies[White]), target_square)){
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wR : bR, (Side == White) ? wR : bR, 0, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wR : bR), ((Side == White) ? wR : bR), 0, 0, 0, 0));
             }
 
 
             // Capture Move
             else{
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wR : bR, (Side == White) ? wR : bR, 1, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wR : bR), ((Side == White) ? wR : bR), 1, 0, 0, 0));
             }
 
             pop_bit(attacks, target_square);
@@ -326,13 +326,13 @@ void generate_queen_moves(int Side, const Position& position, Moves& move_list){
 
             // Quiet Move
             if(!get_bit(((Side == White) ? position.occupancies[Black] : position.occupancies[White]), target_square)){
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wQ : bQ, (Side == White) ? wQ : bQ, 0, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wQ : bQ), ((Side == White) ? wQ : bQ), 0, 0, 0, 0));
             }
 
 
             // Capture Move
             else{
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wQ : bQ, (Side == White) ? wQ : bQ, 1, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wQ : bQ), ((Side == White) ? wQ : bQ), 1, 0, 0, 0));
             }
 
             pop_bit(attacks, target_square);
