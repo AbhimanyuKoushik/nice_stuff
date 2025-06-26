@@ -1,5 +1,5 @@
-#ifndef BOARD_HPP
-#define BOARD_HPP
+#ifndef POSITION_HPP
+#define POSITION_HPP
 
 #include <iostream>
 #include <cstring>
@@ -10,7 +10,7 @@
 #include "movegen.hpp"
 #include "movedef.hpp"
 
-struct Board {
+struct Position {
     uint8_t arrangement[64];
     uint8_t castling;    // 4 bits: white K/Q, black K/Q
 
@@ -23,7 +23,7 @@ struct Board {
     uint8_t HalfMovesMade;
     Moves move_list;
 
-    Board() { init(); }
+    Position() { init(); }
 
     void init();
     void update_arrangement();
@@ -35,6 +35,6 @@ struct Board {
     void generate_moves();
 };
 
-Board parsefen(const std::string &fen);
+Position parsefen(const std::string &fen);
 
 #endif // BOARD_HPP

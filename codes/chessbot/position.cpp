@@ -1,4 +1,4 @@
-#include "board.hpp"
+#include "position.hpp"
 #include "movegen.hpp"    // to get the implementations of generate_* 
 #include "attacks.hpp"    // if you use them in Board:: methods
 #include "nonmagic.hpp"
@@ -9,9 +9,9 @@
 #include <sstream>
 
 //–– parseFEN ––
-Board parsefen(const std::string &fen) {
-    Board board;
-    board.emptyBoard();
+Position parsefen(const std::string &fen) {
+    Position position;
+    position.emptyBoard();
 
     // 1) Split FEN into its 6 fields
     std::istringstream iss(fen);
@@ -45,46 +45,46 @@ Board parsefen(const std::string &fen) {
                 case 'k': p = bK; break;
                 default:  p = Em;  break;
             }
-            set_bit(board.bitboards[p], sq);
-            board.arrangement[sq] = static_cast<uint8_t>(p);
+            set_bit(position.bitboards[p], sq);
+            position.arrangement[sq] = static_cast<uint8_t>(p);
             ++sq;
         }
     }
     
     // 3) Side to move
-    board.SideToMove = (stmPart == "w" ? White : Black);
+    position.SideToMove = (stmPart == "w" ? White : Black);
 
     // 4) Castling rights
-    board.castling = 0;
-    if (castlePart.find('K') != std::string::npos) board.castling |= wk;
-    if (castlePart.find('Q') != std::string::npos) board.castling |= wq;
-    if (castlePart.find('k') != std::string::npos) board.castling |= bk;
-    if (castlePart.find('q') != std::string::npos) board.castling |= bq;
+    position.castling = 0;
+    if (castlePart.find('K') != std::string::npos) position.castling |= wk;
+    if (castlePart.find('Q') != std::string::npos) position.castling |= wq;
+    if (castlePart.find('k') != std::string::npos) position.castling |= bk;
+    if (castlePart.find('q') != std::string::npos) position.castling |= bq;
     
     // 5) En passant target
     if (epPart != "-") {
         int file = epPart[0] - 'a';
         int rank = '9' - epPart[1] - 1;
-        board.enpassant = rank * 8 + file;
+        position.enpassant = rank * 8 + file;
     } else {
-        board.enpassant = no_sq;
+        position.enpassant = no_sq;
     }
 
 
     // 6) Rebuild occupancy bitboards
-    board.compute_occupancies();
+    position.compute_occupancies();
     
-    if(halfmoveClock == 100) board.FiftyMove = true;
+    if(halfmoveClock == 100) position.FiftyMove = true;
     
-    board.HalfMovesMade = fullmoveNumber * 2 - (board.SideToMove == White ? 1 : 0);
+    position.HalfMovesMade = fullmoveNumber * 2 - (position.SideToMove == White ? 1 : 0);
 
-    board.update_bitboards();
+    position.update_bitboards();
 
-    return board;
+    return position;
 }
 
 //–– print ––
-void Board::print() const {
+void Position::print() const {
     std::cout << std::endl;
     for (int rank = 0; rank < 8; ++rank) {
         std::cout << 8 - rank << " ";
@@ -123,7 +123,7 @@ void Board::print() const {
 }
 
 //–– generate_moves ––
-void Board::generate_moves() {
+void Position::generate_moves() {
     // call into your free functions:
     generate_pawn_moves(SideToMove, *this, move_list);
     generate_king_moves(SideToMove, *this, move_list);
@@ -134,7 +134,7 @@ void Board::generate_moves() {
     // plus sliding pieces, etc.
 }
 
-void Board::init() {
+void Position::init() {
     castling   = wk | wq | bk | bq;      // All castling rights initially
     FiftyMove  = false;
     SideToMove = White;
@@ -172,7 +172,7 @@ void Board::init() {
     compute_occupancies();
 }
 
-void Board::update_arrangement() {
+void Position::update_arrangement() {
     // Clear the array-based board
     for (int sq = 0; sq < 64; ++sq) {
         arrangement[sq] = Em;
@@ -189,7 +189,7 @@ void Board::update_arrangement() {
     compute_occupancies();
 }
 
-void Board::update_bitboards() {
+void Position::update_bitboards() {
     // Clear the array-based board
     for (int i = 0; i < 12; i++) {
         bitboards[i] = 0ULL;
@@ -201,7 +201,7 @@ void Board::update_bitboards() {
     compute_occupancies();
 }
 
-void Board::compute_occupancies() {
+void Position::compute_occupancies() {
     occupancies[0] = occupancies[1] = occupancies[2] = 0ULL;
     for (int i = 0; i < 6; i++)
         occupancies[0] |= bitboards[i];
@@ -210,13 +210,13 @@ void Board::compute_occupancies() {
     occupancies[2] = occupancies[0] | occupancies[1];
 }
 
-void Board::makeMove(int from, int to) {
+void Position::makeMove(int from, int to) {
     arrangement[to]   = arrangement[from];
     arrangement[from] = Em;
     HalfMovesMade++;
 }
 
-void Board::emptyBoard() {
+void Position::emptyBoard() {
     for (uint8_t rank = 0; rank < 8; ++rank) {
         for (uint8_t file = 0; file < 8; ++file) {
             arrangement[rank*8 + file] = Em;

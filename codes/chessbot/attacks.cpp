@@ -1,6 +1,6 @@
 // attacks.cpp
 #include "attacks.hpp"
-#include "board.hpp"
+#include "position.hpp"
 #include "types.hpp"
 #include "magic.hpp"
 #include "nonmagic.hpp"
@@ -35,21 +35,21 @@ U64 queen_attacks(int sq, U64 occ) {
 }
 
 // Returns true is any piece from Side attackes square sq on Board board
-bool isSquareAttacked(int sq, const Board& board, int Side) {
+bool isSquareAttacked(int sq, const Position& position, int Side) {
     // Checking using if a piece exists on the attacking square, check if same piece exists on the square it attacks
     // if there then the square is attacked
-    if (Side == White && (PawnAttacks[Black][sq] & board.bitboards[wP])) return true;
-    if (Side == Black && (PawnAttacks[White][sq] & board.bitboards[bP])) return true;
-    if (KnightAttacks[sq] & ((Side == White) ? board.bitboards[wN] : board.bitboards[bN])) return true;
-    if (KingAttacks[sq] & ((Side == White) ? board.bitboards[wK] : board.bitboards[bK])) return true;
-    if (bishop_attacks(sq, board.occupancies[2]) & ((Side == White) ? board.bitboards[wB] : board.bitboards[bB])) return true;
-    if (rook_attacks(sq, board.occupancies[2]) & ((Side == White) ? board.bitboards[wR] : board.bitboards[bR])) return true;
-    if (queen_attacks(sq, board.occupancies[2]) & ((Side == White) ? board.bitboards[wQ] : board.bitboards[bQ])) return true;
+    if (Side == White && (PawnAttacks[Black][sq] & position.bitboards[wP])) return true;
+    if (Side == Black && (PawnAttacks[White][sq] & position.bitboards[bP])) return true;
+    if (KnightAttacks[sq] & ((Side == White) ? position.bitboards[wN] : position.bitboards[bN])) return true;
+    if (KingAttacks[sq] & ((Side == White) ? position.bitboards[wK] : position.bitboards[bK])) return true;
+    if (bishop_attacks(sq, position.occupancies[2]) & ((Side == White) ? position.bitboards[wB] : position.bitboards[bB])) return true;
+    if (rook_attacks(sq, position.occupancies[2]) & ((Side == White) ? position.bitboards[wR] : position.bitboards[bR])) return true;
+    if (queen_attacks(sq, position.occupancies[2]) & ((Side == White) ? position.bitboards[wQ] : position.bitboards[bQ])) return true;
     
     return false;
 }
 
-void print_attacked_squares(const Board& board, int Side){
+void print_attacked_squares(const Position& position, int Side){
     printf("\n");
     
     // loop over board ranks
@@ -66,7 +66,7 @@ void print_attacked_squares(const Board& board, int Side){
                 printf("  %d ", 8 - rank);
             
             // check whether current square is attacked or not
-            printf(" %d", isSquareAttacked(square, board, Side) ? 1 : 0);
+            printf(" %d", isSquareAttacked(square, position, Side) ? 1 : 0);
         }
         
         // print new line every rank

@@ -3,7 +3,7 @@
 #include <string>
 
 #include "bitboard.hpp"
-#include "board.hpp"
+#include "position.hpp"
 #include "types.hpp"
 #include "attacks.hpp"
 #include "magic.hpp"
@@ -21,9 +21,10 @@ int main() {
     // 1. Initialize attack tables
     init_all();
 
-    Board board;
-    board.generate_moves();
-    board.move_list.print_move_list();
+    Position position = parsefen("rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1");
+    position.print();
+    position.generate_moves();
+    position.move_list.print_move_list();
 
     return 0;
 }
