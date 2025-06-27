@@ -16,9 +16,10 @@ void Moves::print_move_list() const {
     for (Move mv : moves) {
         print_move(mv);
     }
-    std::cout << "Total Moves in List: " << moves.size() << "\n"; 
 }
 
 void Moves::add_move(Move mv) {
+    // Debug: uncomment to see when moves are added
+    //std::cout << "Added move: " << moves.size() << std::endl;
     moves.push_back(mv);
 }

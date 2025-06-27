@@ -30,8 +30,7 @@ void generate_pawn_moves(int Side, const Position& position, Moves& move_list){
 
                     // Double push initially
                     if((source_square >= a2) && (source_square <= h2) && !get_bit(position.occupancies[Both], target_square - 8)){
-                        target_square = target_square - 8;
-                        move_list.add_move(encode_move(source_square, target_square, wP, wP, 0, 1, 0, 0));
+                        move_list.add_move(encode_move(source_square, target_square - 8, wP, wP, 0, 1, 0, 0));
                     }
                 }
             }
@@ -47,7 +46,10 @@ void generate_pawn_moves(int Side, const Position& position, Moves& move_list){
                     move_list.add_move(encode_move(source_square, target_square, wP, wB, 1, 0, 0, 0));
                     move_list.add_move(encode_move(source_square, target_square, wP, wN, 1, 0, 0, 0));
                 }
-                else move_list.add_move(encode_move(source_square, target_square, wP, wP, 1, 0, 0, 0));
+                
+                else {
+                    move_list.add_move(encode_move(source_square, target_square, wP, wP, 1, 0, 0, 0));
+                }
 
                 pop_bit(attacks, target_square);
             }
@@ -88,8 +90,7 @@ void generate_pawn_moves(int Side, const Position& position, Moves& move_list){
 
                     // Double push initially
                     if((source_square >= a7) && (source_square <= h7) && !get_bit(position.occupancies[Both], target_square + 8)){
-                        target_square = target_square + 8;
-                        move_list.add_move(encode_move(source_square, target_square, bP, bP, 0, 1, 0, 0));
+                        move_list.add_move(encode_move(source_square, target_square + 8, bP, bP, 0, 1, 0, 0));
                     }
                 }
             }
@@ -127,8 +128,7 @@ void generate_pawn_moves(int Side, const Position& position, Moves& move_list){
     }
 }
 
-void generate_king_moves(int Side, const Position& position, Moves& move_list){
-
+void generate_king_moves(int Side, const Position& position, Moves& move_list){ 
     int source_square, target_square;
     U64 bitboard, attacks;
     uint8_t piece = (Side == White) ? wK : bK;
@@ -143,20 +143,15 @@ void generate_king_moves(int Side, const Position& position, Moves& move_list){
         while(attacks){
             target_square = get_ls1b_index(attacks);
 
-            if(isSquareAttacked(target_square, position, (Side == White) ? Black : White)){
-                pop_bit(attacks, target_square);
-                continue;
-            }
-
             // Quiet Move
             if(!get_bit(((Side == White) ? position.occupancies[Black] : position.occupancies[White]), target_square)){
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wK : bK, (Side == White) ? wK : bK, 0, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wK : bK), ((Side == White) ? wK : bK), 0, 0, 0, 0));
             }
 
 
             // Capture Move
             else{
-                move_list.add_move(encode_move(source_square, target_square, (Side == White) ? wK : bK, (Side == White) ? wK : bK, 1, 0, 0, 0));
+                move_list.add_move(encode_move(source_square, target_square, ((Side == White) ? wK : bK), ((Side == White) ? wK : bK), 1, 0, 0, 0));
             }
 
             pop_bit(attacks, target_square);
@@ -174,7 +169,7 @@ void generate_king_moves(int Side, const Position& position, Moves& move_list){
             if(!get_bit(position.occupancies[Both], f1) && !get_bit(position.occupancies[Both], g1)){
                 // Make sure the King and the squares in which the king travels are not attacked
                 if(!isSquareAttacked(e1, position, Black) && !isSquareAttacked(f1, position, Black) && !isSquareAttacked(g1, position, Black)){
-                    move_list.add_move(encode_move(e1, g1, wK, wK, 0, 0, 0, 1));
+                    if(get_bit(position.bitboards[wR], h1)) move_list.add_move(encode_move(e1, g1, wK, wK, 0, 0, 0, 1));
                 }
             }
         }
@@ -183,7 +178,7 @@ void generate_king_moves(int Side, const Position& position, Moves& move_list){
         if(position.castling & wq){
             if(!get_bit(position.occupancies[Both], b1) && !get_bit(position.occupancies[Both], c1) && !get_bit(position.occupancies[Both], d1)){
                 if(!isSquareAttacked(e1, position, Black) && !isSquareAttacked(d1, position, Black) && !isSquareAttacked(c1, position, Black)){
-                    move_list.add_move(encode_move(e1, c1, wK, wK, 0, 0, 0, 1));
+                    if(get_bit(position.bitboards[wR], a1)) move_list.add_move(encode_move(e1, c1, wK, wK, 0, 0, 0, 1));
                 }
             }
         }
@@ -194,7 +189,7 @@ void generate_king_moves(int Side, const Position& position, Moves& move_list){
             if(!get_bit(position.occupancies[Both], f8) && !get_bit(position.occupancies[Both], g8)){
                 // Make sure the King and the squares in which the king travels are not attacked
                 if(!isSquareAttacked(e8, position, White) && !isSquareAttacked(f8, position, White) && !isSquareAttacked(g8, position, White)){
-                    move_list.add_move(encode_move(e8, g8, bK, bK, 0, 0, 0, 1));
+                    if(get_bit(position.bitboards[bR], h8)) move_list.add_move(encode_move(e8, g8, bK, bK, 0, 0, 0, 1));
                 }
             }
         }
@@ -203,7 +198,7 @@ void generate_king_moves(int Side, const Position& position, Moves& move_list){
         if(position.castling & bq){
             if(!get_bit(position.occupancies[Both], b8) && !get_bit(position.occupancies[Both], c8) && !get_bit(position.occupancies[Both], d8)){
                 if(!isSquareAttacked(e8, position, White) && !isSquareAttacked(d8, position, White) && !isSquareAttacked(c8, position, White)){
-                    move_list.add_move(encode_move(e8, c8, bK, bK, 0, 0, 0, 1));
+                    if(get_bit(position.bitboards[bR], a8)) move_list.add_move(encode_move(e8, c8, bK, bK, 0, 0, 0, 1));
                 }
             }
         }

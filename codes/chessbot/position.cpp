@@ -7,6 +7,7 @@
 #include "movedef.hpp"
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 //–– parseFEN ––
 Position parsefen(const std::string &fen) {
@@ -75,8 +76,6 @@ Position parsefen(const std::string &fen) {
     position.compute_occupancies();
     
     if(halfmoveClock == 100) position.FiftyMove = true;
-    
-    position.HalfMovesMade = fullmoveNumber * 2 - (position.SideToMove == White ? 1 : 0);
 
     position.update_bitboards();
 
@@ -118,13 +117,14 @@ void Position::print() const {
             << ((castling & bk) ? "Black Kingside " : "- ")
             << ((castling & bq) ? "Black Queenside " : "- ")
             << std::endl;
-    std::cout << "Moves Made: " << int(HalfMovesMade/2) << std::endl;
     std::cout << std::endl;
 }
 
 //–– generate_moves ––
 void Position::generate_moves() {
     // call into your free functions:
+
+    move_list = {}; // Add this line
     generate_pawn_moves(SideToMove, *this, move_list);
     generate_king_moves(SideToMove, *this, move_list);
     generate_knight_moves(SideToMove, *this, move_list);
@@ -138,8 +138,6 @@ void Position::init() {
     castling   = wk | wq | bk | bq;      // All castling rights initially
     FiftyMove  = false;
     SideToMove = White;
-
-    HalfMovesMade = 0;
 
     // Pawn ranks
     bitboards[bP] = 0x000000000000FF00ULL;  // white pawns on rank 2
@@ -210,12 +208,6 @@ void Position::compute_occupancies() {
     occupancies[2] = occupancies[0] | occupancies[1];
 }
 
-void Position::makeMove(int from, int to) {
-    arrangement[to]   = arrangement[from];
-    arrangement[from] = Em;
-    HalfMovesMade++;
-}
-
 void Position::emptyBoard() {
     for (uint8_t rank = 0; rank < 8; ++rank) {
         for (uint8_t file = 0; file < 8; ++file) {
@@ -229,4 +221,131 @@ void Position::emptyBoard() {
     occupancies[1] = 0ULL;
     occupancies[2] = 0ULL;
 }
+Position makemove(Move move, Position position){
+    Position original_position = position;    
+    // Quiet Moves
+    int source_square = get_move_source(move);
+    int target_square = get_move_target(move);
+    int piece = get_move_piece(move);
+    if(position.SideToMove == White){
+        if (piece >= bP) return original_position;
+    }
+    else{
+        if(piece <= wK) return original_position;
+    }
+    int promoted = get_move_promoted(move);
+    int capture = get_move_capture(move);
+    int doublepush = get_move_double(move);
+    int enpassant = get_move_enpassant(move);
+    int castling = get_move_castling(move);
+
+    pop_bit(position.bitboards[piece], source_square);
+    set_bit(position.bitboards[piece], target_square);
+
+    if(capture){
+        // Find which piece is captured
+        int start_piece, end_piece;
+        if(position.SideToMove == White){
+            start_piece = bP;
+            end_piece = bK;
+        }
+        else{
+            start_piece = wP;
+            end_piece = wK;
+        }
+
+        for(int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++){
+            // Remove the captured piece from the bitboards
+            if(get_bit(position.bitboards[bb_piece], target_square)){
+                pop_bit(position.bitboards[bb_piece], target_square);
+                break;
+            }
+            if((bb_piece == wR) && (target_square == h1)) castling &= 0b1110;
+            if((bb_piece == wR) && (target_square == a1)) castling &= 0b1101;
+            if((bb_piece == bR) && (target_square == h8)) castling &= 0b1011;
+            if((bb_piece == bR) && (target_square == a8)) castling &= 0b0111;
+        }
+    }
+
+    if(promoted){
+        pop_bit(position.bitboards[position.SideToMove == White ? wP : bP], target_square);
+        set_bit(position.bitboards[promoted], target_square);
+    }
+
+    if(enpassant){
+        (position.SideToMove == White) ? 
+            pop_bit(position.bitboards[bP], target_square + 8) : 
+            pop_bit(position.bitboards[wP], target_square - 8);
+    }
+
+    position.enpassant = no_sq;
+    if(doublepush){
+        position.enpassant = (position.SideToMove == White) ? 
+            (target_square + 8) : (target_square - 8);
+    }
+
+    if(castling){
+        switch(target_square){
+            case g1:
+                pop_bit(position.bitboards[wR], h1);
+                set_bit(position.bitboards[wR], f1);
+                position.castling &= 0b1100;
+                break;
+            case c1:
+                pop_bit(position.bitboards[wR], a1);
+                set_bit(position.bitboards[wR], d1);
+                position.castling &= 0b1100;
+                break;
+            case g8:
+                pop_bit(position.bitboards[bR], h8);
+                set_bit(position.bitboards[bR], f8);
+                position.castling &= 0b0011;
+                break;
+            case c8:
+                pop_bit(position.bitboards[bR], a8);
+                set_bit(position.bitboards[bR], d8);
+                position.castling &= 0b0011;
+                break;
+        }
+    }
+
+    // Update castling rights based on piece movement
+    if(piece == wK){
+        position.castling &= 0b1100;
+    }
+    if(piece == bK){
+        position.castling &= 0b0011;
+    }
+    if((piece == wR) && (source_square == h1)){
+        position.castling &= 0b1110;
+    }
+    if((piece == wR) && (source_square == a1)){
+        position.castling &= 0b1101;
+    }
+    if((piece == bR) && (source_square == h8)){
+        position.castling &= 0b1011;
+    }
+    if((piece == bR) && (source_square == a8)){
+        position.castling &= 0b0111;
+    }
+
+    position.compute_occupancies();
+    position.update_arrangement();
+
+    // 2) Figure out whose king we're protecting *before* the flip
+    int us = position.SideToMove;
+    int our_king_sq = get_ls1b_index(position.bitboards[
+        (us == White) ? wK : bK]);
+    Color them = (us == White) ? Black : White;
+
+    // 3) If they’re attacking our king, it was an illegal move
+    if (isSquareAttacked(our_king_sq, position, them)) {
+        return original_position;   // still White to move
+    }
+
+    // 4) Only now do we switch sides
+    position.SideToMove = them;
+    return position;
+}
+
 //–– any other member-fn definitions … –

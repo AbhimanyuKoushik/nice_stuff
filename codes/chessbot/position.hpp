@@ -20,7 +20,6 @@ struct Position {
     U64 occupancies[3] = {0ULL};
     uint8_t enpassant = no_sq;
 
-    uint8_t HalfMovesMade;
     Moves move_list;
 
     Position() { init(); }
@@ -30,11 +29,36 @@ struct Position {
     void update_bitboards();
     void compute_occupancies();
     void print() const;
-    void makeMove(int from, int to);
     void emptyBoard();
     void generate_moves();
+    bool operator==(const Position& o) const {
+        return
+            SideToMove == o.SideToMove &&
+            castling    == o.castling    &&
+            enpassant   == o.enpassant   &&
+
+            // compare bitboards array
+            std::equal(std::begin(bitboards),
+                       std::end(bitboards),
+                       std::begin(o.bitboards)) &&
+
+            // compare occupancies array
+            std::equal(std::begin(occupancies),
+                       std::end(occupancies),
+                       std::begin(o.occupancies)) &&
+
+            // compare arrangement
+            std::equal(std::begin(arrangement),
+                       std::end(arrangement),
+                       std::begin(o.arrangement));
+    }
+
+    // Inequality operator can simply be the negation
+    bool operator!=(const Position& o) const {
+        return !(*this == o);
+    }
 };
 
 Position parsefen(const std::string &fen);
-
+Position makemove(Move move, Position position);
 #endif // BOARD_HPP

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include <bitset>
 #include <string>
 
@@ -11,20 +12,154 @@
 #include "movegen.hpp"
 #include "movedef.hpp"
 
+// Perft function declarations
+uint64_t perft_count(int depth, Position position) {
+    if (depth == 0) {
+        return 1;
+    }
+    
+    position.generate_moves();
+    uint64_t nodes = 0;
+    
+    for (Move move : position.move_list.moves) {
+        Position newpos = makemove(move, position);
+        
+        // Only count if the move was legal
+        if (newpos.SideToMove != position.SideToMove) {
+            nodes += perft_count(depth - 1, newpos);
+        }
+    }
+    
+    return nodes;
+}
+
+void perft_divide(int depth, Position position) {
+    if (depth <= 0) return;
+    
+    position.generate_moves();
+    uint64_t total_nodes = 0;
+    
+    std::cout << "\nPerft divide at depth " << depth << ":\n";
+    std::cout << "----------------------------------------\n";
+    
+    for (Move move : position.move_list.moves) {
+        Position newpos = makemove(move, position);
+        
+        if (newpos.SideToMove != position.SideToMove) {
+            uint64_t move_nodes = (depth == 1) ? 1 : perft_count(depth - 1, newpos);
+            total_nodes += move_nodes;
+            
+            std::cout << square_to_coordinates[get_move_source(move)]
+                     << square_to_coordinates[get_move_target(move)]
+                     << ": " << move_nodes << std::endl;
+        }
+    }
+    
+    std::cout << "----------------------------------------\n";
+    std::cout << "Total nodes: " << total_nodes << std::endl;
+}
+
 // Initialize all attack tables
 void init_all() {
     init_sliders();      // Magic bitboards for sliding pieces
     init_nonsliders();   // Lookup tables for pawns, knights, kings
 }
+void perftcheck(const std::string& fen,
+                const std::vector<std::pair<int, uint64_t>>& expected_results)
+{
+    // 1) Set up the position from FEN (or use the default ctor for "startpos")
+    Position position;
+    if (fen != "startpos") {
+        position = parsefen(fen);
+    }
+
+    std::cout << "\n=== PERFT TESTS for `" << fen << "` ===\n";
+    for (auto [depth, expected] : expected_results) {
+        // 2) Time the perft_count
+        auto t0 = std::chrono::high_resolution_clock::now();
+        uint64_t nodes = perft_count(depth, position);
+        auto t1 = std::chrono::high_resolution_clock::now();
+
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+        std::cout << "Perft(" << depth << ") = " << nodes;
+        if (nodes == expected) {
+            std::cout << "  ✓ PASS";
+        } else {
+            std::cout << "  ✗ FAIL (expected " << expected << ")";
+        }
+        std::cout << "  [" << ms << " ms]\n";
+    }
+
+    // 3) Show a per-move breakdown at depth 2
+    std::cout << "\nPerft-divide at depth 5:\n";
+    //perft_divide(5, position);
+}
 
 int main() {
-    // 1. Initialize attack tables
+    std::cout << "=== " << NAME << " perft regression suite ===\n\n";
+
+    // 1) Initialize all of your attack‐tables / bitboards
     init_all();
+    std::cout << "Attack tables initialized.\n";
+    // 3) “Kiwipete” test position
+    //    r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
+    std::string pos1 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
+    // Known perft counts for Kiwipete:
+    std::vector<std::pair<int, uint64_t>> pos1_results = {
+        {1,     48ULL},
+        {2,   2039ULL},
+        {3,  97862ULL},
+        {4, 4085603ULL}
+    };
+    perftcheck(pos1, pos1_results);
 
-    Position position = parsefen("rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1");
-    position.print();
-    position.generate_moves();
-    position.move_list.print_move_list();
+    std::string pos2 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1";
+    // Known perft counts for Kiwipete:
+    std::vector<std::pair<int, uint64_t>> pos2_results = {
+        {1,     14ULL},
+        {2,    191ULL},
+        {3,   2812ULL},
+        {4,  43238ULL},
+        {5, 674624ULL}
+    };
+    perftcheck(pos2, pos2_results);
 
+    std::string pos3 = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+    // Known perft counts for Kiwipete:
+    std::vector<std::pair<int, uint64_t>> pos3_results = {
+        {1,       6ULL},
+        {2,     264ULL},
+        {3,    9467ULL},
+        {4,  422333ULL}
+    };
+    perftcheck(pos3, pos3_results);
+    
+
+    std::cout << "\n=== ALL TESTS COMPLETE ===\n";
     return 0;
 }
+
+/*int main(){
+    std::cout << "Initializing chess engine...\n" << std::endl;
+
+    // 1. Initialize all attack tables
+    init_all();
+    std::cout << "Attack tables initialized successfully.\n" << std::endl;
+
+    // 2. Initialize starting position
+    Position position = parsefen("rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR w KQkq - 0 1");
+
+    // 3. Display the initial board
+    std::cout << "Starting position with d2d3 move:" << std::endl;
+    position.print();
+
+    // 4. Generate and display moves
+    position.generate_moves();
+    std::cout << "Legal moves from starting position: " << position.move_list.moves.size() << std::endl;
+    Position newpos;
+    for(Move move : position.move_list.moves){
+        newpos = makemove(move, position);
+        newpos.print();
+    }
+}*/
+
