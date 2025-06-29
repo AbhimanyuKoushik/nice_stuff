@@ -34,7 +34,8 @@ int main() {
         {1,     48ULL},
         {2,   2039ULL},
         {3,  97862ULL},
-        {4, 4085603ULL}
+        {4, 4085603ULL},
+        {5, 193690690ULL}
     };
     perftcheck(pos1, pos1_results);
 
@@ -45,7 +46,8 @@ int main() {
         {2,    191ULL},
         {3,   2812ULL},
         {4,  43238ULL},
-        {5, 674624ULL}
+        {5, 674624ULL},
+        {6, 11030083ULL},
     };
     perftcheck(pos2, pos2_results);
 
@@ -58,6 +60,18 @@ int main() {
         {4,  422333ULL}
     };
     perftcheck(pos3, pos3_results);
+
+    std::string pos4 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    // Known perft counts for Kiwipete:
+    std::vector<std::pair<int, uint64_t>> pos4_results = {
+        {1,       20ULL},
+        {2,      400ULL},
+        {3,     8902ULL},
+        {4,   197281ULL},
+        {5,  4865609ULL},
+        {6, 119060324ULL}
+    };
+    perftcheck(pos4, pos4_results);
     
 
     std::cout << "\n=== ALL TESTS COMPLETE ===\n";

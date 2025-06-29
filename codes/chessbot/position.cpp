@@ -7,6 +7,7 @@
 #include "movedef.hpp"
 #include <iostream>
 #include <sstream>
+#include <future>
 #include <vector>
 
 //–– parseFEN ––
@@ -234,7 +235,7 @@ Position makemove(Move move, Position position){
         if(piece <= wK) return original_position;
     }
     int promoted = get_move_promoted(move);
-    int capture = get_move_capture(move);
+    int capture = get_move_captured(move);
     int doublepush = get_move_double(move);
     int enpassant = get_move_enpassant(move);
     int castling = get_move_castling(move);
@@ -242,29 +243,12 @@ Position makemove(Move move, Position position){
     pop_bit(position.bitboards[piece], source_square);
     set_bit(position.bitboards[piece], target_square);
 
-    if(capture){
-        // Find which piece is captured
-        int start_piece, end_piece;
-        if(position.SideToMove == White){
-            start_piece = bP;
-            end_piece = bK;
-        }
-        else{
-            start_piece = wP;
-            end_piece = wK;
-        }
-
-        for(int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++){
-            // Remove the captured piece from the bitboards
-            if(get_bit(position.bitboards[bb_piece], target_square)){
-                pop_bit(position.bitboards[bb_piece], target_square);
-                break;
-            }
-            if((bb_piece == wR) && (target_square == h1)) castling &= 0b1110;
-            if((bb_piece == wR) && (target_square == a1)) castling &= 0b1101;
-            if((bb_piece == bR) && (target_square == h8)) castling &= 0b1011;
-            if((bb_piece == bR) && (target_square == a8)) castling &= 0b0111;
-        }
+    if(capture != Em){
+        // Remove the captured piece from the bitboards
+        //std::cout << "Side To move: " << (position.SideToMove == White ? "White" : "Black") << "\n";
+        //std::cout << unicode_pieces[bb_piece] << " captured by " << unicode_pieces[piece] << " moved from "<< square_to_coordinates[source_square]
+        //<< " to square " << square_to_coordinates[target_square] << "\n";
+        pop_bit(position.bitboards[capture], target_square);
     }
 
     if(promoted){

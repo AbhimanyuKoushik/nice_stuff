@@ -1,7 +1,6 @@
 #ifndef MOVEGEN_HPP
 #define MOVEGEN_HPP
 
-
 #pragma once
 #include "types.hpp"    // for U64/Color, if needed
 #include "movedef.hpp"

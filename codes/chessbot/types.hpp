@@ -16,8 +16,6 @@ enum Color {
     Both = 2
 };
 
-enum {all_moves, only_captures};
-
 enum Piece {
     wP = 0, wN, wB, wR, wQ, wK,
     bP, bN, bB, bR, bQ, bK, Em, PieceCount
