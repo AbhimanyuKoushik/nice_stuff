@@ -80,6 +80,68 @@ Position parsefen(const std::string &fen) {
     return position;
 }
 
+std::string Position::get_fen() const {
+    std::ostringstream oss;
+
+    // 1) Piece placement
+    for (int rank = 7; rank >= 0; --rank) {
+        int empty = 0;
+        for (int file = 0; file < 8; ++file) {
+            int sq = rank*8 + file;
+            // find which piece occupies this square
+            int ptype = Em;
+            for (int p = wP; p <= bK; ++p) {
+                if (bitboards[p] & (1ULL << sq)) {
+                    ptype = p;
+                    break;
+                }
+            }
+            if (ptype == Em) {
+                ++empty;
+            } else {
+                if (empty) { oss << empty; empty = 0; }
+                static const char sym[12] = {
+                    'P','N','B','R','Q','K',
+                    'p','n','b','r','q','k'
+                };
+                oss << sym[ptype];
+            }
+        }
+        if (empty) oss << empty;
+        if (rank)   oss << '/';
+    }
+
+    // 2) Side to move
+    oss << ' ' << (SideToMove==White?'w':'b');
+
+    // 3) Castling
+    oss << ' ';
+    bool any = false;
+    if (castling & wk) { oss << 'K'; any = true; }
+    if (castling & wq) { oss << 'Q'; any = true; }
+    if (castling & bk) { oss << 'k'; any = true; }
+    if (castling & bq) { oss << 'q'; any = true; }
+    if (!any)         oss << '-';
+
+    // 4) En passant
+    oss << ' ';
+    if (enpassant != no_sq) {
+        int f = enpassant % 8;
+        int r = enpassant / 8;
+        oss << char('a'+f) << char('1'+r);
+    } else {
+        oss << '-';
+    }
+
+    // 5) Halfmove clock (if you track it, use that; else default to 0)
+    oss << " 0";
+
+    // 6) Fullmove number (if you track it, use that; else default to 1)
+    oss << " 1";
+
+    return oss.str();
+}
+
 //–– print ––
 void Position::print() const {
     std::cout << "\n";

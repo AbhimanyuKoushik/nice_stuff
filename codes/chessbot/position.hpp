@@ -28,6 +28,7 @@ struct Position {
     void print() const;
     void emptyBoard();
     void generate_moves();
+    std::string get_fen() const;
     bool operator==(const Position& o) const {
         return
             SideToMove == o.SideToMove &&
@@ -55,4 +56,5 @@ struct Position {
 Position parsefen(const std::string &fen);
 Position makemove(Move move, Position position);
 void FilterLegalMoves(Position& position);
+
 #endif // BOARD_HPP

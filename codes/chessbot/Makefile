@@ -3,7 +3,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O3
 TARGET = lumin
-SOURCES = Lumin.cpp movegen.cpp magic.cpp nonmagic.cpp attacks.cpp bitboard.cpp position.cpp movedef.cpp perftest.cpp
+SOURCES = Lumin.cpp movegen.cpp magic.cpp nonmagic.cpp attacks.cpp bitboard.cpp position.cpp movedef.cpp perftest.cpp uci.cpp game.cpp
 
 # Build the program
 $(TARGET): $(SOURCES)

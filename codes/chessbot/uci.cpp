@@ -36,7 +36,7 @@ Move parse_move(const std::string& move_str, Position position) {
     int target_square = dst_file + (8 - dst_rank) * 8;
 
     // Iterate through all generated legal moves
-    for (Move mv : position.move_list.moves) {
+    for (Move mv : position.move_list) {
         if (source_square == get_move_source(mv) && target_square == get_move_target(mv)){
             int promoted = get_move_promoted(mv);
             // Handle promotions
@@ -66,5 +66,3 @@ Move parse_move(const std::string& move_str, Position position) {
     // No matching legal move found
     return 0;
 }
-
-

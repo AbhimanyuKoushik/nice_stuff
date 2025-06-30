@@ -12,20 +12,61 @@
 #include "movegen.hpp"
 #include "movedef.hpp"
 #include "perftest.hpp"
+#include "uci.hpp"
+#include "game.hpp"
 
 
 // Initialize all attack tables
 void init_all() {
     init_sliders();      // Magic bitboards for sliding pieces
     init_nonsliders();   // Lookup tables for pawns, knights, kings
+    std::cout << "Attack tables initialized.\n";
 }
 
 int main() {
     std::cout << "=== " << NAME << " perft regression suite ===\n\n";
 
     // 1) Initialize all of your attack‐tables / bitboards
+    //init_all();
+
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+    // Initialize all attack tables, bitboards, magics, etc.
     init_all();
-    std::cout << "Attack tables initialized.\n";
+
+    std::cout << "Welcome to the Chess Engine!\n";
+    std::cout << "Choose mode:\n";
+    std::cout << "1. Bot vs Human\n";
+    std::cout << "2. Bot vs Bot\n";
+    std::cout << "Enter your choice (1 or 2): ";
+
+    int mode = 0;
+    std::cin >> mode;
+    std::cin.ignore(); // Clear newline
+
+    // Set up initial position (FEN can be customized)
+    std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    Position start = parsefen(fen);
+
+    Game game;
+    game.currposition = start;
+
+    if (mode == 1) {
+        std::cout << "Choose your side (w for White, b for Black): ";
+        char side;
+        std::cin >> side;
+        Color userColor = (side == 'w' || side == 'W') ? White : Black;
+        game.Startplaying(userColor, false);
+    } else if (mode == 2) {
+        std::cout << "Bot vs Bot mode selected. Press Enter to start.\n";
+        std::cin.ignore();
+        game.Startplaying(White, true); // Bot vs Bot, White starts
+    } else {
+        std::cout << "Invalid mode selected.\n";
+        return 1;
+    }
+
+    std::cout << "Thank you for playing!\n";
     // 3) “Kiwipete” test position
     //    r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
     std::string pos1 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
@@ -79,28 +120,3 @@ int main() {
     std::cout << "\n=== ALL TESTS COMPLETE ===\n";
     return 0;
 }
-
-/*int main(){
-    std::cout << "Initializing chess engine...\n" << std::endl;
-
-    // 1. Initialize all attack tables
-    init_all();
-    std::cout << "Attack tables initialized successfully.\n" << std::endl;
-
-    // 2. Initialize starting position
-    Position position = parsefen("rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR w KQkq - 0 1");
-
-    // 3. Display the initial board
-    std::cout << "Starting position with d2d3 move:" << std::endl;
-    position.print();
-
-    // 4. Generate and display moves
-    position.generate_moves();
-    std::cout << "Legal moves from starting position: " << position.move_list.moves.size() << std::endl;
-    Position newpos;
-    for(Move move : position.move_list.moves){
-        newpos = makemove(move, position);
-        newpos.print();
-    }
-}*/
-
