@@ -175,10 +175,7 @@ void generate_king_moves(int Side, const Position& position, Moves& move_list){
                 else if(get_bit(position.bitboards[wQ], target_square)) PieceAttack = wQ;
                 else if(get_bit(position.bitboards[wK], target_square)) PieceAttack = wK;
             }
-            if(isSquareAttacked(target_square, position, (Side == White) ? Black : White)){
-                pop_bit(attacks, target_square);
-                continue;
-            }
+            
 
             // Quiet Move
             if(!get_bit(((Side == White) ? position.occupancies[Black] : position.occupancies[White]), target_square)){

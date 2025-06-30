@@ -62,6 +62,8 @@ int main() {
     perftcheck(pos3, pos3_results);
 
     std::string pos4 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    Position position4 = parsefen(pos4);
+    position4.print();
     // Known perft counts for Kiwipete:
     std::vector<std::pair<int, uint64_t>> pos4_results = {
         {1,       20ULL},

@@ -11,7 +11,6 @@
 #include "movedef.hpp"
 
 struct Position {
-    uint8_t arrangement[64];
     uint8_t castling;    // 4 bits: white K/Q, black K/Q
 
     Color   SideToMove;
@@ -25,8 +24,6 @@ struct Position {
     Position() { init(); }
 
     void init();
-    void update_arrangement();
-    void update_bitboards();
     void compute_occupancies();
     void print() const;
     void emptyBoard();
@@ -45,12 +42,8 @@ struct Position {
             // compare occupancies array
             std::equal(std::begin(occupancies),
                        std::end(occupancies),
-                       std::begin(o.occupancies)) &&
+                       std::begin(o.occupancies));
 
-            // compare arrangement
-            std::equal(std::begin(arrangement),
-                       std::end(arrangement),
-                       std::begin(o.arrangement));
     }
 
     // Inequality operator can simply be the negation
@@ -61,4 +54,5 @@ struct Position {
 
 Position parsefen(const std::string &fen);
 Position makemove(Move move, Position position);
+void FilterLegalMoves(Position& position);
 #endif // BOARD_HPP

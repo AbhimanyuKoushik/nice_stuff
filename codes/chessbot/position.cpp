@@ -48,7 +48,6 @@ Position parsefen(const std::string &fen) {
                 default:  p = Em;  break;
             }
             set_bit(position.bitboards[p], sq);
-            position.arrangement[sq] = static_cast<uint8_t>(p);
             ++sq;
         }
     }
@@ -78,47 +77,53 @@ Position parsefen(const std::string &fen) {
     
     if(halfmoveClock == 100) position.FiftyMove = true;
 
-    position.update_bitboards();
-
     return position;
 }
 
 //–– print ––
 void Position::print() const {
-    std::cout << std::endl;
-    for (int rank = 0; rank < 8; ++rank) {
-        std::cout << 8 - rank << " ";
+    std::cout << "\n";
+    // 1) Board diagram: ranks 8→1, files a→h
+    for (int rank = 7; rank >= 0; --rank) {
+        std::cout << (rank+1) << " ";
         for (int file = 0; file < 8; ++file) {
-            uint8_t sq = arrangement[rank*8 + file];
-            switch (sq) {
-                case wR: std::printf("♜ "); break;
-                case wN: std::printf("♞ "); break;
-                case wB: std::printf("♝ "); break;
-                case wQ: std::printf("♛ "); break;
-                case wK: std::printf("♚ "); break;
-                case wP: std::printf("♟︎ "); break;
-                case bR: std::printf("♖ "); break;
-                case bN: std::printf("♘ "); break;
-                case bB: std::printf("♗ "); break;
-                case bQ: std::printf("♕ "); break;
-                case bK: std::printf("♔ "); break;
-                case bP: std::printf("♙ "); break;
-                default: std::printf(". "); break;
+            int sq = (7 - rank)*8 + file;
+            // default empty
+            const char* sym = ".";
+            // scan piece bitboards for something on this square
+            for (int p = wP; p <= bK; ++p) {
+                if (bitboards[p] & (1ULL << sq)) {
+                    sym = unicode_pieces[p];
+                    break;
+                }
             }
+            std::printf("%s ", sym);
         }
         std::printf("\n");
     }
-    std::cout << "  a b c d e f g h" << std::endl;
-    std::cout << std::endl;
-    std::cout << "Side to move: " << (SideToMove == Black ? "Black" : "White") << std::endl;
-    std::cout << "Enpassant Square: " << (enpassant == no_sq ? "No Square" : square_to_coordinates[enpassant]) << std::endl;
-    std::cout << "Castling: "
-            << ((castling & wk) ? "White Kingside " : "- ")
-            << ((castling & wq) ? "White Queenside " : "- ")
-            << ((castling & bk) ? "Black Kingside " : "- ")
-            << ((castling & bq) ? "Black Queenside " : "- ")
-            << std::endl;
-    std::cout << std::endl;
+
+    // 2) Files labels
+    std::cout << "  a b c d e f g h\n\n";
+
+    // 3) Side to move
+    std::cout << "Side to move: "
+              << (SideToMove == White ? "White" : "Black")
+              << "\n";
+
+    // 4) En passant
+    std::cout << "Enpassant Square: "
+              << (enpassant == no_sq
+                  ? "No Square"
+                  : square_to_coordinates[enpassant])
+              << "\n";
+
+    // 5) Castling rights
+    std::cout << "Castling: ";
+    std::cout << ((castling & wk) ? "White Kingside "  : "- ");
+    std::cout << ((castling & wq) ? "White Queenside " : "- ");
+    std::cout << ((castling & bk) ? "Black Kingside "  : "- ");
+    std::cout << ((castling & bq) ? "Black Queenside"   : "- ");
+    std::cout << "\n\n";
 }
 
 //–– generate_moves ––
@@ -132,6 +137,7 @@ void Position::generate_moves() {
     generate_bishop_moves(SideToMove, *this, move_list);
     generate_rook_moves(SideToMove, *this, move_list);
     generate_queen_moves(SideToMove, *this, move_list);
+    FilterLegalMoves(*this);
     // plus sliding pieces, etc.
 }
 
@@ -164,39 +170,7 @@ void Position::init() {
     bitboards[bK] = 0x0000000000000010ULL;  // bit 4
     bitboards[wK] = 0x1000000000000000ULL;  // bit 60
 
-    // Fill the array-based board for print() and other routines
-    std::memcpy(arrangement, startpos, sizeof(arrangement));
-
     // If you have a compute_occupancies() helper, call it now:
-    compute_occupancies();
-}
-
-void Position::update_arrangement() {
-    // Clear the array-based board
-    for (int sq = 0; sq < 64; ++sq) {
-        arrangement[sq] = Em;
-    }
-    // For each piece type, set squares from its bitboard
-    for (int p = wP; p <= bK; ++p) {
-        U64 bb = bitboards[p];
-        while (bb) {
-            int sq = get_ls1b_index(bb);   // index of least‑significant 1
-            arrangement[sq] = static_cast<uint8_t>(p);
-            pop_bit(bb, sq);                  // pop that bit
-        }
-    }
-    compute_occupancies();
-}
-
-void Position::update_bitboards() {
-    // Clear the array-based board
-    for (int i = 0; i < 12; i++) {
-        bitboards[i] = 0ULL;
-    }
-    // For each piece type, set squares from its bitboard
-    for (int sq = 0; sq < 64; sq++) {
-        if(arrangement[sq] != Em) set_bit(bitboards[arrangement[sq]], sq);
-    }
     compute_occupancies();
 }
 
@@ -210,11 +184,6 @@ void Position::compute_occupancies() {
 }
 
 void Position::emptyBoard() {
-    for (uint8_t rank = 0; rank < 8; ++rank) {
-        for (uint8_t file = 0; file < 8; ++file) {
-            arrangement[rank*8 + file] = Em;
-        }
-    }
     for(uint8_t i = 0; i < 12; i++){
         bitboards[i] = 0ULL;
     }
@@ -222,18 +191,13 @@ void Position::emptyBoard() {
     occupancies[1] = 0ULL;
     occupancies[2] = 0ULL;
 }
+
 Position makemove(Move move, Position position){
     Position original_position = position;    
     // Quiet Moves
     int source_square = get_move_source(move);
     int target_square = get_move_target(move);
     int piece = get_move_piece(move);
-    if(position.SideToMove == White){
-        if (piece >= bP) return original_position;
-    }
-    else{
-        if(piece <= wK) return original_position;
-    }
     int promoted = get_move_promoted(move);
     int capture = get_move_captured(move);
     int doublepush = get_move_double(move);
@@ -314,7 +278,6 @@ Position makemove(Move move, Position position){
     }
 
     position.compute_occupancies();
-    position.update_arrangement();
 
     // 2) Figure out whose king we're protecting *before* the flip
     int us = position.SideToMove;
@@ -322,14 +285,37 @@ Position makemove(Move move, Position position){
         (us == White) ? wK : bK]);
     Color them = (us == White) ? Black : White;
 
-    // 3) If they’re attacking our king, it was an illegal move
-    if (isSquareAttacked(our_king_sq, position, them)) {
-        return original_position;   // still White to move
-    }
-
     // 4) Only now do we switch sides
     position.SideToMove = them;
     return position;
 }
 
+void FilterLegalMoves(Position &position) {
+    // Whose turn is it?
+    Color us = position.SideToMove;
+    Color them = (us == White ? Black : White);
+
+    std::vector<Move> legal;
+    legal.reserve(position.move_list.size());
+
+    // For each pseudo‑legal move:
+    for (Move mv : position.move_list) {
+        // 1. Apply the move to a copy of the position
+        Position copy = makemove(mv, position);
+        // makemove should already flip SideToMove, update bitboards & occupancies
+
+        // 2. Locate the king of the side that just moved
+        Color mover = (copy.SideToMove == us ? them : us);
+        uint8_t kingPiece = (mover == White ? wK : bK);
+        int kingSq = get_ls1b_index(copy.bitboards[kingPiece]);
+
+        // 3. If that king is *not* attacked by the new side‑to‑move, it’s legal
+        if (!isSquareAttacked(kingSq, copy, copy.SideToMove)) {
+            legal.push_back(mv);
+        }
+    }
+
+    // 4. Replace the old list with just the legal moves
+    position.move_list = std::move(legal);
+}
 //–– any other member-fn definitions … –

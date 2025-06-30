@@ -59,6 +59,7 @@ Move parse_move(const std::string& move_str, Position position) {
             }
 
             // Non-promotion moves match
+            return mv;
         }
     }
 
