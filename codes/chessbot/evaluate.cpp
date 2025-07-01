@@ -2,98 +2,10 @@
 #include "position.hpp"
 #include "movedef.hpp"
 #include "attacks.hpp"
+#include "types.hpp"
 #include <iostream>
 #include <climits>
 #include <algorithm>
-
-//----------------------------------------------------------------------
-// Material values for each Piece enum (wP…bK, Em last)
-//----------------------------------------------------------------------
-static const int material_score[PieceCount] = {
-    /* wP */ 100,
-    /* wN */ 320,
-    /* wB */ 330,
-    /* wR */ 500,
-    /* wQ */ 900,
-    /* wK */ 20000,
-    /* bP */ -100,
-    /* bN */ -320,
-    /* bB */ -330,
-    /* bR */ -500,
-    /* bQ */ -900,
-    /* bK */ -20000,
-    /* Em */ 0
-};
-
-//----------------------------------------------------------------------
-// Piece-square tables (white's perspective; black will be flipped)
-//----------------------------------------------------------------------
-const int PAWN_TABLE[64] = {
-    0, 0, 0, 0, 0, 0, 0, 0,
-    90, 90, 90, 90, 90, 90, 90, 90,
-    30, 30, 30, 40, 40, 30, 30, 30,
-    20, 20, 20, 30, 30, 30, 20, 20,
-    10, 10, 10, 20, 20, 10, 10, 10,
-    5, 5, 10, 20, 20, 5, 5, 5,
-    0, 0, 0, 5, 5, 0, 0, 0,
-    0, 0, 0, -10, -10, 0, 0, 0
-};
-
-const int KNIGHT_TABLE[64] = {
-    -5, 0, 0, 0, 0, 0, 0, -5,
-    -5, 0, 0, 10, 10, 0, 0, -5,
-    -5, 5, 20, 20, 20, 20, 5, -5,
-    -5, 10, 20, 30, 30, 20, 10, -5,
-    -5, 10, 20, 30, 30, 20, 10, -5,
-    -5, 5, 20, 10, 10, 20, 5, -5,
-    -5, 0, 0, 0, 0, 0, 0, -5,
-    -5, -10, 0, 0, 0, 0, -10, -5
-};
-
-const int BISHOP_TABLE[64] = {
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 10, 10, 0, 0, 0,
-    0, 0, 10, 20, 20, 10, 0, 0,
-    0, 0, 10, 20, 20, 10, 0, 0,
-    0, 10, 0, 0, 0, 0, 10, 0,
-    0, 30, 0, 0, 0, 0, 30, 0,
-    0, 0, -10, 0, 0, -10, 0, 0
-};
-
-const int ROOK_TABLE[64] = {
-    50, 50, 50, 50, 50, 50, 50, 50,
-    50, 50, 50, 50, 50, 50, 50, 50,
-    0, 0, 10, 20, 20, 10, 0, 0,
-    0, 0, 10, 20, 20, 10, 0, 0,
-    0, 0, 10, 20, 20, 10, 0, 0,
-    0, 0, 10, 20, 20, 10, 0, 0,
-    0, 0, 10, 20, 20, 10, 0, 0,
-    0, 0, 0, 20, 20, 0, 0, 0
-};
-
-const int KING_TABLE[64] = {
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 5, 5, 5, 5, 0, 0,
-    0, 5, 5, 10, 10, 5, 5, 0,
-    0, 5, 10, 20, 20, 10, 5, 0,
-    0, 5, 10, 20, 20, 10, 5, 0,
-    0, 0, 5, 10, 10, 5, 0, 0,
-    0, 5, 5, -5, -5, 0, 5, 0,
-    0, 0, 5, 0, -15, 0, 10, 0
-};
-
-// Mirror positional score tables for opposite side
-const int MirrorScore[64] = {
-    a1, b1, c1, d1, e1, f1, g1, h1,
-    a2, b2, c2, d2, e2, f2, g2, h2,
-    a3, b3, c3, d3, e3, f3, g3, h3,
-    a4, b4, c4, d4, e4, f4, g4, h4,
-    a5, b5, c5, d5, e5, f5, g5, h5,
-    a6, b6, c6, d6, e6, f6, g6, h6,
-    a7, b7, c7, d7, e7, f7, g7, h7,
-    a8, b8, c8, d8, e8, f8, g8, h8
-};
 
 //----------------------------------------------------------------------
 // Evaluate: material + positional, from side-to-move's perspective
@@ -105,6 +17,13 @@ int Evaluate(const Position& pos) {
     if (!pos.bitboards[wK]) return INT_MIN + 1000; // white mated
     if (!pos.bitboards[bK]) return INT_MAX - 1000; // black mated
 
+    int numQueens  = count_bits(pos.bitboards[wQ]) + count_bits(pos.bitboards[bQ]);
+    int numRooks   = count_bits(pos.bitboards[wR]) + count_bits(pos.bitboards[bR]);
+    int numBishops = count_bits(pos.bitboards[wB]) + count_bits(pos.bitboards[bB]);
+    int numKnights = count_bits(pos.bitboards[wN]) + count_bits(pos.bitboards[bN]);
+    int endgameWeightSum = numQueens * queenEndgameWeight + numRooks * rookEndgameWeight + numBishops * bishopEndgameWeight + numKnights * knightEndgameWeight;
+
+    int endgameT = 1 - std::min(1, (int)(endgameWeightSum / (float)endgameStartWeight));
     // Evaluate all pieces
     for (int p = wP; p <= bK; ++p) {
         U64 bb = pos.bitboards[p];
@@ -118,12 +37,14 @@ int Evaluate(const Position& pos) {
                 case wN: score += KNIGHT_TABLE[sq]; break;
                 case wB: score += BISHOP_TABLE[sq]; break;
                 case wR: score += ROOK_TABLE[sq]; break;
-                case wK: score += KING_TABLE[sq]; break;
+                case wK: score += ((int)(KING_TABLE_START[sq] * (1 - endgameT)) + (int)(KING_TABLE_END[sq] * endgameT)); break;
+                case wQ: score += QUEEN_TABLE[sq]; break;
                 case bP: score -= PAWN_TABLE[MirrorScore[sq]]; break;
                 case bN: score -= KNIGHT_TABLE[MirrorScore[sq]]; break;
                 case bB: score -= BISHOP_TABLE[MirrorScore[sq]]; break;
                 case bR: score -= ROOK_TABLE[MirrorScore[sq]]; break;
-                case bK: score -= KING_TABLE[MirrorScore[sq]]; break;
+                case bK: score -= ((int)(KING_TABLE_START[MirrorScore[sq]] * (1 - endgameT)) + (int)(KING_TABLE_END[MirrorScore[sq]] * endgameT)); break;
+                case bQ: score -= QUEEN_TABLE[MirrorScore[sq]]; break;
                 default: break;
             }
             
@@ -138,84 +59,75 @@ int Evaluate(const Position& pos) {
 //----------------------------------------------------------------------
 // Minimax + alpha-beta
 //----------------------------------------------------------------------
-Move best_move = 0;
-int ply = 0;
 
+// Simple negamax: returns a score from the POV of pos.SideToMove
 int negamax(Position pos, int depth, int alpha, int beta) {
-    // At leaf or zero-depth: return static evaluation
+    // 1) Leaf node: static evaluate
     if (depth == 0) {
         return Evaluate(pos);
     }
-    
-    // Increase ply (for root detection)
-    ++ply;
-    
-    // Generate all legal moves for this position
+
+    // 2) Generate pseudo‑legal moves
     pos.generate_moves();
+    // 3) No moves → checkmate or stalemate
     if (pos.move_list.empty()) {
-        // No moves: checkmate or stalemate
-        Color us = pos.SideToMove;
+        Color us   = pos.SideToMove;
         Color them = (us == White ? Black : White);
-        int ksq = get_ls1b_index(pos.bitboards[us == White ? wK : bK]);
-        bool in_check = isSquareAttacked(ksq, pos, them);
-        
-        --ply;
-        return in_check 
-            ? (-20000 + ply) // mate score (closer mate is worse)
-            : 0; // stalemate draw
+        int kingsq = get_ls1b_index(pos.bitboards[ us==White ? wK : bK ]);
+        // checkmate = large negative, stalemate = 0
+        return isSquareAttacked(kingsq, pos, them)
+            ? -200000 + (depth)   // deeper mate is slightly better
+            : 0;
     }
 
-    best_move = pos.move_list[0];
-    Move local_best = 0;
-    
-    // Loop over each move
+    // 4) Recurse
+    int best = -INT_MAX;
     for (Move m : pos.move_list) {
-        // Apply move
         Position nxt = makemove(m, pos);
-        
-        // Recurse, flipping sign and alpha/beta
-        int score = -negamax(nxt, depth - 1, -beta, -alpha);
-        
-        // Alpha-beta cutoff
-        if (score >= beta) {
-            --ply;
-            return beta; // fail-hard
-        }
-        
-        if (score > alpha) {
-            alpha = score;
-            local_best = m;
-        }
+        int val = -negamax(nxt, depth - 1, -beta, -alpha);
+        if(val >= beta){ return beta; }
+        alpha = std::max(alpha, val);
     }
-
-    // On the root ply, record the best move
-    if (ply == 1 && local_best != 0) {
-        best_move = local_best;
-    }
-
-    --ply;
     return alpha;
 }
 
-void Search_Position(Position position, int depth) {
-    best_move = 0; // Reset best move
-    ply = 0; // Reset ply counter
-    
-    std::cout << "Starting search at depth " << depth << "..." << std::endl;
-    
-    int score = negamax(position, depth, INT_MIN, INT_MAX);
-    
-    if (best_move != 0) {
-        std::cout << "Best move: " 
-                  << square_to_coordinates[get_move_source(best_move)] 
-                  << square_to_coordinates[get_move_target(best_move)] 
-                  << " (score: " << score << ")" << std::endl;
-    } else {
-        std::cout << "No best move found in search!" << std::endl;
+// At the root, search and pick the best‐scoring move
+Move Search_Position(Position pos, int depth) {
+    std::cout << "Starting search at depth " << depth << "...\n";
+
+    // 1) Generate root moves
+    pos.generate_moves();
+    if (pos.move_list.empty()) return 0;
+
+    Move best_move   = pos.move_list[0];
+    int  alpha       = -INT_MAX;
+    int  beta        =  INT_MAX;
+    int  best_score  = -INT_MAX;
+
+    // 2) Negamax over each branch
+    for (Move m : pos.move_list) {
+        Position nxt = makemove(m, pos);
+        // note the negation and swapped alpha/beta
+        int score = -negamax(nxt, depth - 1, -beta, -alpha);
+
+        if (score > best_score) {
+            best_score = score;
+            best_move  = m;
+        }
+        alpha = std::max(alpha, score);
+        // optional: if (alpha >= beta) break;  // root‐level cut
     }
+
+    std::cout << "Best move: "
+              << square_to_coordinates[get_move_source(best_move)]
+              << square_to_coordinates[get_move_target(best_move)]
+              << " (score: " << best_score << ")\n";
+
+    return best_move;
 }
 
+
 Move findbestmove(Position position) {
-    Search_Position(position, 5); // Search 4 plies deep
-    return best_move;
+    // You can parameterize depth; here we hardcode 5
+    return Search_Position(position, 5);
 }

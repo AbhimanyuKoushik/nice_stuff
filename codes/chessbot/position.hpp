@@ -28,6 +28,7 @@ struct Position {
     void print() const;
     void emptyBoard();
     void generate_moves();
+    //void order_moves();
     std::string get_fen() const;
 };
 

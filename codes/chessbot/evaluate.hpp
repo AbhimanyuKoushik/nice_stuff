@@ -17,7 +17,7 @@ int Evaluate(const Position& pos);
 
 // Helper functions
 int negamax(Position pos, int depth, int alpha, int beta);
-void Search_Position(Position position, int depth);
+Move Search_Position(Position position, int depth);
 Move findbestmove(Position position);
 
 #endif
