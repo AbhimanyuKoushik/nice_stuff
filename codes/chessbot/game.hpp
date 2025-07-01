@@ -16,7 +16,6 @@ public:
 
     Game() : BotColor(Black), GameEnded(false), Winner(-2) {}
 
-    Move findbestmove(const Position &position);
     bool isDrawByInsufficientMaterial(const Position &position);
     bool isGameEnded(const Position &position);
     int getWinner(const Position &position);

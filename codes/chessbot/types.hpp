@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <climits>
 #include <unordered_map>
 
 // Engine name

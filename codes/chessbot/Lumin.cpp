@@ -2,6 +2,8 @@
 #include <chrono>
 #include <bitset>
 #include <string>
+#include <ctime>
+#include <cstdlib>
 
 #include "bitboard.hpp"
 #include "position.hpp"
@@ -14,7 +16,7 @@
 #include "perftest.hpp"
 #include "uci.hpp"
 #include "game.hpp"
-
+#include "evaluate.hpp"
 
 // Initialize all attack tables
 void init_all() {
@@ -24,99 +26,86 @@ void init_all() {
 }
 
 int main() {
-    std::cout << "=== " << NAME << " perft regression suite ===\n\n";
-
-    // 1) Initialize all of your attack‐tables / bitboards
-    //init_all();
-
+    // Initialize random seed
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
-
+    
     // Initialize all attack tables, bitboards, magics, etc.
     init_all();
-
-    std::cout << "Welcome to the Chess Engine!\n";
+    
+    std::cout << "Welcome to " << NAME << "!\n";
     std::cout << "Choose mode:\n";
     std::cout << "1. Bot vs Human\n";
     std::cout << "2. Bot vs Bot\n";
-    std::cout << "Enter your choice (1 or 2): ";
+    std::cout << "3. Test Position\n";
+    std::cout << "Enter your choice (1, 2, or 3): ";
 
     int mode = 0;
     std::cin >> mode;
     std::cin.ignore(); // Clear newline
 
-    // Set up initial position (FEN can be customized)
-    std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    Position start = parsefen(fen);
-
-    Game game;
-    game.currposition = start;
-
     if (mode == 1) {
+        // Set up initial position
+        std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        Position start = parsefen(fen);
+
+        Game game;
+        game.currposition = start;
+
         std::cout << "Choose your side (w for White, b for Black): ";
         char side;
         std::cin >> side;
         Color userColor = (side == 'w' || side == 'W') ? White : Black;
         game.Startplaying(userColor, false);
+        
     } else if (mode == 2) {
+        // Set up initial position
+        std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        Position start = parsefen(fen);
+
+        Game game;
+        game.currposition = start;
+
         std::cout << "Bot vs Bot mode selected. Press Enter to start.\n";
         std::cin.ignore();
         game.Startplaying(White, true); // Bot vs Bot, White starts
+        
+    } else if (mode == 3) {
+        // Test position mode
+        std::cout << "Testing evaluation function...\n";
+        
+        // Test position: Italian Game opening
+        Position position = parsefen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
+        
+        std::cout << "\nCurrent position:\n";
+        position.print();
+        
+        std::cout << "\nSearching for best move...\n";
+        Move bestMove = findbestmove(position);
+        
+        if (bestMove != 0) {
+            std::cout << "\nBest move found: ";
+            print_move(bestMove);
+            std::cout << std::endl;
+            
+            // Show move details
+            std::cout << "Move details: " 
+                      << square_to_coordinates[get_move_source(bestMove)] 
+                      << square_to_coordinates[get_move_target(bestMove)] << std::endl;
+            
+            // Apply the move and show resulting position
+            Position newPos = makemove(bestMove, position);
+            std::cout << "\nPosition after move:\n";
+            newPos.print();
+            
+        } else {
+            std::cout << "No valid move found!\n";
+        }
+        
     } else {
         std::cout << "Invalid mode selected.\n";
         return 1;
     }
 
     std::cout << "Thank you for playing!\n";
-    // 3) “Kiwipete” test position
-    //    r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
-    std::string pos1 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
-    // Known perft counts for Kiwipete:
-    std::vector<std::pair<int, uint64_t>> pos1_results = {
-        {1,     48ULL},
-        {2,   2039ULL},
-        {3,  97862ULL},
-        {4, 4085603ULL},
-        {5, 193690690ULL}
-    };
-    perftcheck(pos1, pos1_results);
-
-    std::string pos2 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1";
-    // Known perft counts for Kiwipete:
-    std::vector<std::pair<int, uint64_t>> pos2_results = {
-        {1,     14ULL},
-        {2,    191ULL},
-        {3,   2812ULL},
-        {4,  43238ULL},
-        {5, 674624ULL},
-        {6, 11030083ULL},
-    };
-    perftcheck(pos2, pos2_results);
-
-    std::string pos3 = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
-    // Known perft counts for Kiwipete:
-    std::vector<std::pair<int, uint64_t>> pos3_results = {
-        {1,       6ULL},
-        {2,     264ULL},
-        {3,    9467ULL},
-        {4,  422333ULL}
-    };
-    perftcheck(pos3, pos3_results);
-
-    std::string pos4 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    Position position4 = parsefen(pos4);
-    position4.print();
-    // Known perft counts for Kiwipete:
-    std::vector<std::pair<int, uint64_t>> pos4_results = {
-        {1,       20ULL},
-        {2,      400ULL},
-        {3,     8902ULL},
-        {4,   197281ULL},
-        {5,  4865609ULL},
-        {6, 119060324ULL}
-    };
-    perftcheck(pos4, pos4_results);
-    
-
-    std::cout << "\n=== ALL TESTS COMPLETE ===\n";
     return 0;
 }

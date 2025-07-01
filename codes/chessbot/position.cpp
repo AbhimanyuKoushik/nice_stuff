@@ -7,7 +7,6 @@
 #include "movedef.hpp"
 #include <iostream>
 #include <sstream>
-#include <future>
 #include <vector>
 
 //–– parseFEN ––

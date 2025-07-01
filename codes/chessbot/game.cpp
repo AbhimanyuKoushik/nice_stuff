@@ -8,16 +8,8 @@
 #include "attacks.hpp"
 #include "bitboard.hpp"
 #include "uci.hpp"
+#include "evaluate.hpp"
 #include "movedef.hpp"
-
-//----------------------------------------------------------------------
-// Random move picker
-//----------------------------------------------------------------------
-
-Move Game::findbestmove(const Position &position) {
-    if (position.move_list.empty()) return 0;
-    return position.move_list[rand() % position.move_list.size()];
-}
 
 //----------------------------------------------------------------------
 // Insufficient material draw test (CORRECTED)
@@ -116,8 +108,6 @@ int Game::getWinner(const Position &position) {
 //----------------------------------------------------------------------
 
 void Game::Startplaying(Color YourColor, bool bot_vs_bot) {
-    // Initialize random seed
-    srand(static_cast<unsigned int>(time(nullptr)));
     
     BotColor = (YourColor == White) ? Black : White;
     GameEnded = false;

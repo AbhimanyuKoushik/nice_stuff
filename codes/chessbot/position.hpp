@@ -29,28 +29,6 @@ struct Position {
     void emptyBoard();
     void generate_moves();
     std::string get_fen() const;
-    bool operator==(const Position& o) const {
-        return
-            SideToMove == o.SideToMove &&
-            castling    == o.castling    &&
-            enpassant   == o.enpassant   &&
-
-            // compare bitboards array
-            std::equal(std::begin(bitboards),
-                       std::end(bitboards),
-                       std::begin(o.bitboards)) &&
-
-            // compare occupancies array
-            std::equal(std::begin(occupancies),
-                       std::end(occupancies),
-                       std::begin(o.occupancies));
-
-    }
-
-    // Inequality operator can simply be the negation
-    bool operator!=(const Position& o) const {
-        return !(*this == o);
-    }
 };
 
 Position parsefen(const std::string &fen);

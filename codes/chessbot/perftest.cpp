@@ -197,3 +197,17 @@ void perftcheck(const std::string& fen,
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
     std::cout << "Perft-divide completed in " << ms << " ms\n";
 }
+
+// Working example
+/*
+std::string pos1 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
+    // Known perft counts for Kiwipete:
+    std::vector<std::pair<int, uint64_t>> pos1_results = {
+        {1,     48ULL},
+        {2,   2039ULL},
+        {3,  97862ULL},
+        {4, 4085603ULL},
+        {5, 193690690ULL}
+    };
+    perftcheck(pos1, pos1_results);
+*/
