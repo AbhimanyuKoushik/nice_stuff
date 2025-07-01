@@ -146,13 +146,12 @@ int negamax(Position pos, int depth, int alpha, int beta) {
     if (depth == 0) {
         return Evaluate(pos);
     }
-
+    
     // Increase ply (for root detection)
     ++ply;
     
     // Generate all legal moves for this position
     pos.generate_moves();
-    
     if (pos.move_list.empty()) {
         // No moves: checkmate or stalemate
         Color us = pos.SideToMove;
@@ -166,6 +165,7 @@ int negamax(Position pos, int depth, int alpha, int beta) {
             : 0; // stalemate draw
     }
 
+    best_move = pos.move_list[0];
     Move local_best = 0;
     
     // Loop over each move
@@ -216,6 +216,6 @@ void Search_Position(Position position, int depth) {
 }
 
 Move findbestmove(Position position) {
-    Search_Position(position, 4); // Search 4 plies deep
+    Search_Position(position, 5); // Search 4 plies deep
     return best_move;
 }
