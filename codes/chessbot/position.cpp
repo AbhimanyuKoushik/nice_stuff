@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 //–– parseFEN ––
 Position parsefen(const std::string &fen) {
@@ -192,12 +193,13 @@ void Position::generate_moves() {
     // call into your free functions:
 
     move_list = {}; // Add this line
-    generate_pawn_moves(SideToMove, *this, move_list);
-    generate_king_moves(SideToMove, *this, move_list);
+
     generate_knight_moves(SideToMove, *this, move_list);
     generate_bishop_moves(SideToMove, *this, move_list);
     generate_rook_moves(SideToMove, *this, move_list);
     generate_queen_moves(SideToMove, *this, move_list);
+    generate_pawn_moves(SideToMove, *this, move_list);
+    generate_king_moves(SideToMove, *this, move_list);
     FilterLegalMoves(*this);
     // plus sliding pieces, etc.
 }
@@ -251,6 +253,60 @@ void Position::emptyBoard() {
     occupancies[0] = 0ULL;
     occupancies[1] = 0ULL;
     occupancies[2] = 0ULL;
+}
+
+void Position::order_moves() {
+    int n = move_list.size();
+    if (n <= 1) return;
+
+    // Reserve a scratch buffer of (score, move) pairs
+    std::vector<std::pair<int, Move>> scored;
+    scored.reserve(n);
+
+    // Precompute material scores locally for speed
+    const int *mat = material_score;
+
+    Color us   = SideToMove;
+    Color them = (us == White ? Black : White);
+
+    // 1) Score each move once
+    for (Move mv : move_list) {
+        int score = 0;
+
+        // MVV/LVA: Most Valuable Victim, Least Valuable Aggressor
+        if (get_move_capture_flag(mv)) {
+            int victim   = get_move_captured(mv);
+            int attacker = get_move_piece(mv);
+            score += 10 * mat[victim] - mat[attacker];
+        }
+
+        // Promotion bonus
+        int promo = get_move_promoted(mv);
+        if (promo) {
+            score += mat[promo];
+        }
+
+        // Penalty for moving into attacked square
+        int dst = get_move_target(mv);
+        if (isSquareAttacked(dst, *this, them)) {
+            score -= mat[ get_move_piece(mv) ];
+        }
+
+        scored.emplace_back(score, mv);
+    }
+
+    // 2) Sort by score descending
+    std::sort(
+        scored.begin(), scored.end(),
+        [](auto &a, auto &b){
+            return a.first > b.first;
+        }
+    );
+
+    // 3) Unpack back into move_list
+    for (int i = 0; i < n; ++i) {
+        move_list[i] = scored[i].second;
+    }
 }
 
 Position makemove(Move move, Position position){

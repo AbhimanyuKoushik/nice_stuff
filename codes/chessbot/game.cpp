@@ -8,7 +8,7 @@
 #include "attacks.hpp"
 #include "bitboard.hpp"
 #include "uci.hpp"
-#include "evaluate.hpp"
+#include "Evaluation/basiceval.hpp"
 #include "movedef.hpp"
 
 //----------------------------------------------------------------------

@@ -26,6 +26,7 @@ struct Position {
     void init();
     void compute_occupancies();
     void print() const;
+    void order_moves();
     void emptyBoard();
     void generate_moves();
     //void order_moves();

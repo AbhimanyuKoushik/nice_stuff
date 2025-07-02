@@ -1,11 +1,12 @@
-#include "evaluate.hpp"
-#include "position.hpp"
-#include "movedef.hpp"
-#include "attacks.hpp"
-#include "types.hpp"
+#include "basiceval.hpp"
+#include "../position.hpp"
+#include "../movedef.hpp"
+#include "../attacks.hpp"
+#include "../types.hpp"
 #include <iostream>
 #include <climits>
 #include <algorithm>
+#include <chrono>
 
 //----------------------------------------------------------------------
 // Evaluate: material + positional, from side-to-move's perspective
@@ -60,15 +61,40 @@ int Evaluate(const Position& pos) {
 // Minimax + alpha-beta
 //----------------------------------------------------------------------
 
+
+int positions = 0;
 // Simple negamax: returns a score from the POV of pos.SideToMove
+int Quiescence(Position pos, int alpha, int beta){
+    // Stand Pat
+    int best_value =  Evaluate(pos);
+    if( best_value >= beta )
+        return best_value;
+    if( best_value > alpha )
+        alpha = best_value;
+
+    for(Move move : pos.move_list){
+        if(!get_move_capture_flag(move)) {continue;}
+            int score = -Quiescence(makemove(move, pos), -beta, -alpha );
+            if( score >= beta )
+                return score;
+            if( score > best_value )
+                best_value = score;
+            if( score > alpha )
+                alpha = score;
+    }
+    positions++;
+    return best_value;
+}
+
 int negamax(Position pos, int depth, int alpha, int beta) {
     // 1) Leaf node: static evaluate
     if (depth == 0) {
-        return Evaluate(pos);
+        return Quiescence(pos, alpha, beta);
     }
 
     // 2) Generate pseudo‑legal moves
     pos.generate_moves();
+    pos.order_moves();
     // 3) No moves → checkmate or stalemate
     if (pos.move_list.empty()) {
         Color us   = pos.SideToMove;
@@ -97,6 +123,7 @@ Move Search_Position(Position pos, int depth) {
 
     // 1) Generate root moves
     pos.generate_moves();
+    pos.order_moves();
     if (pos.move_list.empty()) return 0;
 
     Move best_move   = pos.move_list[0];
@@ -129,5 +156,13 @@ Move Search_Position(Position pos, int depth) {
 
 Move findbestmove(Position position) {
     // You can parameterize depth; here we hardcode 5
-    return Search_Position(position, 5);
+    auto t0 = std::chrono::high_resolution_clock::now();
+    Move best_move = Search_Position(position, 6);
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+    double ms = microseconds / 1000.0;
+    std::cout << "Time taken: " << ms << "(ms)\n";
+    std::cout << "Positions Searched: " << positions << "\n";
+    return best_move;
 }

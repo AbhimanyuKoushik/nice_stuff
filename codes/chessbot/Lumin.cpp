@@ -16,7 +16,7 @@
 #include "perftest.hpp"
 #include "uci.hpp"
 #include "game.hpp"
-#include "evaluate.hpp"
+#include "Evaluation/basiceval.hpp"
 
 // Initialize all attack tables
 void init_all() {
@@ -74,7 +74,7 @@ int main() {
         std::cout << "Testing evaluation function...\n";
         
         // Test position: Italian Game opening
-        Position position = parsefen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
+        Position position = parsefen("r3k2r/p1ppqpb1/Bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPB1PPP/R3K2R b KQkq - 0 1");
         
         std::cout << "\nCurrent position:\n";
         position.print();
