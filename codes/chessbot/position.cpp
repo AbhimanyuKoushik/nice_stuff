@@ -286,12 +286,6 @@ void Position::order_moves() {
             score += mat[promo];
         }
 
-        // Penalty for moving into attacked square
-        int dst = get_move_target(mv);
-        if (isSquareAttacked(dst, *this, them)) {
-            score -= mat[ get_move_piece(mv) ];
-        }
-
         scored.emplace_back(score, mv);
     }
 

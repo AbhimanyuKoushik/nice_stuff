@@ -9,15 +9,16 @@ typedef std::vector<Move> Moves;
 /*
         Binary Move bits                                            hexadecimal constants
 
-0000 0000 0000 0000 0000 0011 1111 source square    -> first 6 bits      0x3f
-0000 0000 0000 0000 1111 1100 0000 target square    -> next 6 bits       0xfc0
-0000 0000 0000 1111 0000 0000 0000 piece            -> next 4 bits       0xf000
-0000 0000 1111 0000 0000 0000 0000 promoted piece   -> next 4 bits       0xf0000
-0000 0001 0000 0000 0000 0000 0000 Capture flag     -> next bit          0x100000
-0001 1110 0000 0000 0000 0000 0000 Captured Piece   -> next 4 bits       0x100000
-0010 0000 0000 0000 0000 0000 double push flag      -> next bit          0x200000
-0100 0000 0000 0000 0000 0000 enpassant flag        -> next bit          0x400000
-1000 0000 0000 0000 0000 0000 Castling flag         -> next bit          0x800000
+0000 0000 0000 0000 0000 0000 0011 1111 source square    -> first 6 bits      0x3f
+0000 0000 0000 0000 0000 1111 1100 0000 target square    -> next 6 bits       0xfc0
+0000 0000 0000 0000 1111 0000 0000 0000 piece            -> next 4 bits       0xf000
+0000 0000 0000 1111 0000 0000 0000 0000 promoted piece   -> next 4 bits       0xf0000
+0000 0000 0001 0000 0000 0000 0000 0000 Capture flag     -> next bit          0x100000
+0000 0001 1110 0000 0000 0000 0000 0000 Captured Piece   -> next 4 bits       0x100000
+0000 0010 0000 0000 0000 0000 0000 double push flag      -> next bit          0x200000
+0000 0100 0000 0000 0000 0000 0000 enpassant flag        -> next bit          0x400000
+0000 1000 0000 0000 0000 0000 0000 Castling flag         -> next bit          0x800000
+0001 0000 0000 0000 0000 0000 0000 Check flag            -> next bit          0x1000000
 
 */
 
