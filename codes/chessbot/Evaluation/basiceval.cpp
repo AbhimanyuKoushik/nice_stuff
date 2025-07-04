@@ -193,110 +193,250 @@ int Quiescence(Position pos, int alpha, int beta, int depth){
     return best_value;
 }
 
-int negamax(Position pos, int depth, int alpha, int beta) {
-    // 1) Leaf node: static evaluate
+// Use fixed-size arrays for better performance
+static constexpr int MAX_MOVES = 256;
+static std::pair<Move, int> previous_move_scores[MAX_MOVES];
+static int previous_move_count = 0;
+static std::mutex move_ordering_mutex;
+
+// Global time control variables
+static std::atomic<bool> time_up{false};
+static std::chrono::high_resolution_clock::time_point search_start_time;
+static std::chrono::milliseconds search_time_limit{1000};
+
+// Helper function to check if time is up
+inline bool is_time_up() {
+    auto current_time = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - search_start_time);
+    return elapsed >= search_time_limit;
+}
+
+// Custom comparator for move ordering
+struct MoveComparator {
+    bool operator()(const std::pair<Move, int>& a, const std::pair<Move, int>& b) const {
+        return a.second > b.second; // Higher scores first
+    }
+};
+
+void order_moves_by_previous_scores(Position& pos) {
+    if (previous_move_count == 0) {
+        pos.order_moves();
+        return;
+    }
+    
+    Move ordered_moves[MAX_MOVES];
+    Move unscored_moves[MAX_MOVES];
+    int ordered_count = 0;
+    int unscored_count = 0;
+    
+    // First, add moves that were scored in previous iteration (in order)
+    {
+        std::lock_guard<std::mutex> lock(move_ordering_mutex);
+        for (int i = 0; i < previous_move_count; ++i) {
+            Move scored_move = previous_move_scores[i].first;
+            
+            for (size_t j = 0; j < pos.move_list.size(); ++j) {
+                if (pos.move_list[j] == scored_move) {
+                    ordered_moves[ordered_count++] = scored_move;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Add unscored moves
+    for (size_t i = 0; i < pos.move_list.size(); ++i) {
+        Move move = pos.move_list[i];
+        bool found = false;
+        
+        for (int j = 0; j < ordered_count; ++j) {
+            if (ordered_moves[j] == move) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            unscored_moves[unscored_count++] = move;
+        }
+    }
+    
+    // Combine moves
+    pos.move_list.clear();
+    pos.move_list.reserve(ordered_count + unscored_count);
+    
+    for (int i = 0; i < ordered_count; ++i) {
+        pos.move_list.push_back(ordered_moves[i]);
+    }
+    for (int i = 0; i < unscored_count; ++i) {
+        pos.move_list.push_back(unscored_moves[i]);
+    }
+}
+
+// Modified negamax with time checking
+int negamax(const Position& pos, int depth, int alpha, int beta) {
+    // Check time every few nodes to avoid overhead
+    static thread_local int node_count = 0;
+    if (++node_count % 1000 == 0 && is_time_up()) {
+        return alpha; // Return current alpha when time is up
+    }
+    
     if (depth == 0) {
         return Quiescence(pos, alpha, beta, 1);
     }
 
-    // 2) Generate pseudo‑legal moves
-    pos.generate_moves();
-    pos.order_moves();
-    // 3) No moves → checkmate or stalemate
-    if (pos.move_list.empty()) {
-        Color us   = pos.SideToMove;
-        Color them = (us == White ? Black : White);
-        int kingsq = get_ls1b_index(pos.bitboards[ us==White ? wK : bK ]);
-        // checkmate = large negative, stalemate = 0
-        return isSquareAttacked(kingsq, pos, them)
-            ? -200000 - 10 * (depth)   // deeper mate is slightly better
+    Position search_pos = pos;
+    search_pos.generate_moves();
+    search_pos.order_moves();
+    
+    if (search_pos.move_list.empty()) {
+        Color us = search_pos.SideToMove;
+        int kingsq = get_ls1b_index(search_pos.bitboards[us == White ? wK : bK]);
+        
+        return isSquareAttacked(kingsq, search_pos, us ^ 1)
+            ? (-MATE_SCORE - depth)
             : 0;
     }
 
-    // 4) Recurse
     int best = -INT_MAX;
-    for (Move m : pos.move_list) {
-        Position nxt = makemove(m, pos);
+    for (Move m : search_pos.move_list) {
+        if (is_time_up()) break; // Stop search if time is up
+        
+        Position nxt = makemove(m, search_pos);
         int val = -negamax(nxt, depth - 1, -beta, -alpha);
-        if(val >= beta){ return beta; }
+        
+        if (val >= beta) return beta;
+        best = std::max(best, val);
         alpha = std::max(alpha, val);
     }
-    return alpha;
+    return best;
 }
 
-Move Search_Position(Position pos, int depth) {
+Move Search_Position(Position pos, int max_depth) {
     positions.store(0, std::memory_order_relaxed);
     
     pos.generate_moves();
-    pos.order_moves();
-    if (pos.move_list.empty()) return 0;
     
-    // Optimized thread count
-    unsigned int num_threads = std::min(
-        std::max(1u, std::thread::hardware_concurrency()),
-        static_cast<unsigned int>(pos.move_list.size())
-    );
+    Move best_move = pos.move_list[0];
+    int best_score = -INT_MAX;
     
-    // Use single-threaded for small move counts
-    if (pos.move_list.size() <= 4 || depth <= 2) {
-        Move best_move = pos.move_list[0];
-        int best_score = -INT_MAX;
-        
-        for (Move m : pos.move_list) {
-            Position nxt = makemove(m, pos);
-            int score = -negamax(nxt, depth - 1, -INT_MAX, INT_MAX);
-            if (score > best_score) {
-                best_score = score;
-                best_move = m;
-            }
+    // Initialize time control
+    search_start_time = std::chrono::high_resolution_clock::now();
+    time_up.store(false, std::memory_order_relaxed);
+    
+    std::cout << "Starting 1-second search..." << std::endl;
+    
+    // Iterative deepening with proper time control
+    for (int current_depth = 1; current_depth <= max_depth; ++current_depth) {
+        // Check time before starting new depth
+        if (is_time_up()) {
+            std::cout << "Time limit reached before depth " << current_depth << std::endl;
+            break;
         }
-        return best_move;
-    }
-    
-    ThreadedSearch searcher;
-    
-    // Pre-allocate move batches
-    std::vector<std::vector<Move>> move_batches(num_threads);
-    for (size_t i = 0; i < pos.move_list.size(); ++i) {
-        move_batches[i % num_threads].push_back(pos.move_list[i]);
-    }
-    
-    std::vector<std::future<SearchResult>> futures;
-    futures.reserve(num_threads);
-    
-    // Launch threads with pre-computed batches
-    for (unsigned int t = 0; t < num_threads; ++t) {
-        if (move_batches[t].empty()) continue;
         
-        futures.push_back(std::async(std::launch::async, 
-            [&searcher, pos, batch = std::move(move_batches[t]), depth]() {
-                SearchResult best_in_batch;
+        std::cout << "Searching depth " << current_depth << "..." << std::endl;
+        
+        // Order moves based on previous iteration scores
+        order_moves_by_previous_scores(pos);
+        
+        Move iteration_best_move = 0;
+        int iteration_best_score = -INT_MAX;
+        std::pair<Move, int> current_move_scores[MAX_MOVES];
+        int current_score_count = 0;
+        bool depth_completed = true;
+        
+        // Search all moves at current depth
+        for (size_t i = 0; i < pos.move_list.size(); ++i) {
+            // Time check before each move
+            if (is_time_up()) {
+                std::cout << "Time limit reached during depth " << current_depth 
+                         << " after " << i << " moves" << std::endl;
+                depth_completed = false;
+                break;
+            }
+            
+            Move m = pos.move_list[i];
+            Position nxt = makemove(m, pos);
+            int score = -negamax(nxt, current_depth - 1, -INT_MAX, INT_MAX);
+            
+            // Only record score if we didn't run out of time
+            if (!is_time_up()) {
+                current_move_scores[current_score_count++] = {m, score};
                 
-                for (Move move : batch) {
-                    if (searcher.is_mate_found()) break;
-                    
-                    SearchResult result = searcher.search_move(pos, move, depth, -INT_MAX, INT_MAX);
-                    
-                    if (result.score > best_in_batch.score) {
-                        best_in_batch = result;
-                    }
-                    
-                    searcher.update_best_move(result);
+                if (score > iteration_best_score) {
+                    iteration_best_score = score;
+                    iteration_best_move = m;
                 }
                 
-                return best_in_batch;
-            }));
+                // Early termination for mate
+                if (score >= MATE_SCORE - 1000) {
+                    std::cout << "Mate found at depth " << current_depth << "!" << std::endl;
+                    best_move = m;
+                    best_score = score;
+                    goto search_complete;
+                }
+            } else {
+                depth_completed = false;
+                break;
+            }
+        }
+        
+        // Only update best move if we completed the depth
+        if (depth_completed && iteration_best_move != 0) {
+            best_move = iteration_best_move;
+            best_score = iteration_best_score;
+            
+            auto current_time = std::chrono::high_resolution_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - search_start_time);
+            
+            std::cout << "Depth " << current_depth << " completed in " << elapsed.count() 
+                      << "ms, best: " << square_to_coordinates[get_move_source(best_move)]
+                      << square_to_coordinates[get_move_target(best_move)]
+                      << " (score: " << best_score << ")" << std::endl;
+            
+            // Store move scores for next iteration ordering
+            {
+                std::lock_guard<std::mutex> lock(move_ordering_mutex);
+                previous_move_count = std::min(current_score_count, MAX_MOVES);
+                for (int i = 0; i < previous_move_count; ++i) {
+                    previous_move_scores[i] = current_move_scores[i];
+                }
+                std::sort(previous_move_scores, previous_move_scores + previous_move_count, MoveComparator());
+            }
+        } else {
+            std::cout << "Depth " << current_depth << " incomplete due to time limit" << std::endl;
+            break;
+        }
+        
+        // Final time check after completing depth
+        if (is_time_up()) {
+            std::cout << "Time limit reached after completing depth " << current_depth << std::endl;
+            break;
+        }
     }
     
-    // Collect results
-    for (auto& future : futures) {
-        future.get();
-    }
+    search_complete:
+    auto final_time = std::chrono::high_resolution_clock::now();
+    auto total_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(final_time - search_start_time);
+    std::cout << "Search completed in " << total_elapsed.count() << "ms, positions: " 
+              << positions.load() << std::endl;
     
-    return searcher.get_best_move();
+    return best_move;
 }
 
+// Updated findbestmove function
 Move findbestmove(Position position) {
+    // Set search time limit (can be adjusted)
+    search_time_limit = std::chrono::milliseconds(2500); // 2.5 second
+    
+    // Use high max depth since time will limit the search
+    Move best_move = Search_Position(position, 20);
+    
+    return best_move;
+}
+
+
+/*Move findbestmove(Position position) {
     static int cached_num_pieces = -1;
     static int cached_search_depth = 4;
     static U64 position_hash = 0;
@@ -369,7 +509,7 @@ Move findbestmove(Position position) {
         }
         else {
             // King and pawn endgame - deepest search
-            cached_search_depth = 11;
+            cached_search_depth = 12;
         }
         
         cached_num_pieces = num_pieces;
@@ -394,7 +534,7 @@ Move findbestmove(Position position) {
     std::cout << "Time: " << ms << "ms, Positions: " << positions.load() << std::endl;
     
     return best_move;
-}
+}*/
 
 // Removed struct and class definitions (they're in header)
 

@@ -59,7 +59,7 @@ int main() {
         
     } else if (mode == 2) {
         // Set up initial position
-        std::string fen = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
+        std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         Position start = parsefen(fen);
 
         Game game;
@@ -74,7 +74,7 @@ int main() {
         std::cout << "Testing evaluation function...\n";
         
         // Test position: Italian Game opening
-        Position position = parsefen("7k/5Qbp/6p1/3q4/4RR2/1nr3P1/5PKP/3r4 w - - 3 33");
+        Position position = parsefen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         
         std::cout << "\nCurrent position:\n";
         position.print();

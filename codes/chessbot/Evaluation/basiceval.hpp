@@ -47,7 +47,7 @@ int ForceKingToCorner(const Position& pos);
 
 // Search functions with optimized signatures
 int Quiescence(Position pos, int alpha, int beta, int depth);
-int negamax(Position pos, int depth, int alpha, int beta);
+int negamax_timed(const Position& pos, int depth, int alpha, int beta);
 
 // Main search interface
 Move Search_Position(Position pos, int depth);
